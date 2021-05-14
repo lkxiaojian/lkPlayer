@@ -1,5 +1,6 @@
 package com.xiaojian.lkplayer
 
+import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 
@@ -16,10 +17,19 @@ class LkPlayer : SurfaceHolder.Callback {
     }
 
     private var surfaceHolder: SurfaceHolder? = null
-    fun setSurfaceView(surfaceView: SurfaceView){
+    private lateinit var surfaceView: SurfaceView;
+    fun setSurfaceView(surfaceView: SurfaceView) {
+        this.surfaceView = surfaceView;
         this.surfaceHolder?.removeCallback(this)
-        this.surfaceHolder=surfaceView.holder
+        this.surfaceHolder = surfaceView.holder
         this.surfaceHolder?.addCallback(this)
+    }
+
+    fun start(path:String){
+        this.surfaceHolder?.let {
+            native_startPlay(path, it.surface)
+        }
+
     }
 
 
@@ -28,11 +38,11 @@ class LkPlayer : SurfaceHolder.Callback {
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        this.surfaceHolder=holder
+        this.surfaceHolder = holder
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
     }
 
-    external fun native_startPlay(url:String): String
+    external fun native_startPlay(url: String, surfaceView: Surface): String
 }

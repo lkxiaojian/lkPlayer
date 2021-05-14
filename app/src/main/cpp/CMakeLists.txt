@@ -21,6 +21,9 @@ target_link_libraries(
         lkplayer
         avfilter avformat avcodec avutil swresample swscale
         ${log-lib}
+        android
+        z
+        OpenSLES
       )
 
 #avfilter avformat avcodec avutil swresample swscale
