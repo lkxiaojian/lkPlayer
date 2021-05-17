@@ -11,13 +11,11 @@ extern "C" {
 }
 
 
-extern "C"
-JNIEXPORT jstring
 
-Java_com_xiaojian_lkplayer_LkPlayer_native_1startPlay(JNIEnv
-                                                      *env,
-                                                      jobject _thiz, jstring
-                                                      url_, jobject surface) {
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_lkxiaojian_lkplayerlibrary_LkPlayer_native_1startPlay(JNIEnv *env, jobject thiz,
+                                                               jstring url_, jobject surface) {
 
     const char *path = env->GetStringUTFChars(url_, nullptr);
 //总上下文

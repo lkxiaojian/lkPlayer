@@ -1,4 +1,4 @@
-package com.xiaojian.lkplayer
+package com.lkxiaojian.lkplayerlibrary
 
 import android.view.Surface
 import android.view.SurfaceHolder

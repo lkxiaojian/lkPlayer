@@ -14,13 +14,13 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        externalNativeBuild {
-            cmake {
-                cppFlags "-frtti -fexceptions "
-//                abiFilters  'armeabi-v7a'
-                abiFilters 'arm64-v8a', 'armeabi-v7a'
-            }
-        }
+//        externalNativeBuild {
+//            cmake {
+//                cppFlags "-frtti -fexceptions "
+////                abiFilters  'armeabi-v7a'
+//                abiFilters 'arm64-v8a', 'armeabi-v7a'
+//            }
+//        }
     }
 
     buildTypes {
@@ -36,12 +36,12 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    externalNativeBuild {
-        cmake {
-            path file('src/main/cpp/CMakeLists.txt')
-            version '3.10.2'
-        }
-    }
+//    externalNativeBuild {
+//        cmake {
+//            path file('src/main/cpp/CMakeLists.txt')
+//            version '3.10.2'
+//        }
+//    }
     buildFeatures {
         viewBinding true
     }
@@ -62,4 +62,5 @@ dependencies {
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    implementation project(":LkPlayerlibrary")
 }

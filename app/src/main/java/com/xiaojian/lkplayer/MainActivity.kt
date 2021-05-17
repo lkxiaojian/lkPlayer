@@ -7,6 +7,7 @@ import android.os.Environment
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.lkxiaojian.lkplayerlibrary.LkPlayer
 import com.xiaojian.lkplayer.databinding.ActivityMainBinding
 import java.io.File
 
