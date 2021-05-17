@@ -25,5 +25,3 @@ target_link_libraries(
         z
         OpenSLES
       )
-
-#avfilter avformat avcodec avutil swresample swscale

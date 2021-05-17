@@ -45,4 +45,6 @@ class LkPlayer : SurfaceHolder.Callback {
     }
 
     external fun native_startPlay(url: String, surfaceView: Surface): String
+
+    external fun native_prepare(url: String):String
 }
