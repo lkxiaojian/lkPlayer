@@ -52,7 +52,8 @@ Java_com_xiaojian_lkplayer_LkPlayer_native_1startPlay(JNIEnv
     SwsContext *swsContext = sws_getContext(avCodecContext->width, avCodecContext->height,
                                             avCodecContext->pix_fmt,
                                             avCodecContext->width, avCodecContext->height,
-                                            AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr);
+                                            AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr,
+                                            nullptr);
 
     ANativeWindow_setBuffersGeometry(aNativeWindow, avCodecContext->width, avCodecContext->height,
                                      WINDOW_FORMAT_RGBA_8888);
@@ -77,7 +78,7 @@ Java_com_xiaojian_lkplayer_LkPlayer_native_1startPlay(JNIEnv
         sws_scale(swsContext, avFrame->data, avFrame->linesize, 0, avFrame->height, det_data,
                   det_linesize);
         if (avPacket->stream_index == video_steam_idx) {
-//非零   正在解码
+            //非零   正在解码
             if (ret == 0) {
 
                 ANativeWindow_lock(aNativeWindow, &outBuffer, nullptr);
