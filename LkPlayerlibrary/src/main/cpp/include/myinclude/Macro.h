@@ -15,4 +15,9 @@
 // 定义debug信息
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
 
+//主线程
+#define THREAD_MAIN 1
+//子线程
+#define THREAD_CHILD 2
+
 #endif //LKPLAYER_MACRO_H

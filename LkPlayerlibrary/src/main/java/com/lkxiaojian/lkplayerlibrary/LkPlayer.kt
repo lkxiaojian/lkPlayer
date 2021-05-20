@@ -52,8 +52,11 @@ class LkPlayer : SurfaceHolder.Callback {
         this.playListener = listener
     }
 
-    fun onPlayError(message: String, code: Int) {
-        playListener?.onError(message, code)
+    fun onPlayError(errorMessage:String, errorCode: Int) {
+        playListener?.onError(errorMessage,errorCode)
+    }
+    fun onPrepared(){
+        playListener?.onPrepared()
     }
 
 

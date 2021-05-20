@@ -12,13 +12,18 @@ extern "C" {
 }
 #include "myinclude/JavaCallHelper.h"
 #include "myinclude/LkFfmpage.h"
+JavaVM *javaVm= nullptr;
+jint JNI_OnLoad(JavaVM *vm ,void * reserved){
+    javaVm=vm;
+    return JNI_VERSION_1_6;
+}
 
 extern "C"
 JNIEXPORT jstring JNICALL
 Java_com_lkxiaojian_lkplayerlibrary_LkPlayer_native_1prepare(JNIEnv *env, jobject thiz,
                                                              jstring url) {
     const char *path = env->GetStringUTFChars(url, nullptr);
-    auto *javaCallHelper=new JavaCallHelper();
+    auto *javaCallHelper=new JavaCallHelper(env,thiz,javaVm);
     auto *lkFfmpage=new LkFfmpage(javaCallHelper,const_cast<char *>(path));
     lkFfmpage->prepare();
     return nullptr;

@@ -5,6 +5,8 @@ package com.lkxiaojian.lkplayerlibrary.`interface`
  *author: lk
  *description： PlayListener
  */
+
 interface PlayListener {
-    fun onError(message:String,errorCode:Int)
+    fun onError(errorMessage:String,errorCode: Int)
+    fun onPrepared()
 }
