@@ -6,7 +6,7 @@
 #define LKPLAYER_VIDEOCHANNEL_H
 
 
-#include "BaseChannel.h"
+#include "myinclude/BaseChannel.h"
 
 class VideoChannel: BaseChannel {
 public:

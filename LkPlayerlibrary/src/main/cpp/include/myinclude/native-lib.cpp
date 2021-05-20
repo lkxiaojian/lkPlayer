@@ -8,18 +8,19 @@ extern "C" {
 #include "libavformat/avformat.h"
 #include <libswscale/swscale.h>
 #include <libavutil/imgutils.h>
+
+}
 #include "myinclude/JavaCallHelper.h"
 #include "myinclude/LkFfmpage.h"
-}
 
 extern "C"
 JNIEXPORT jstring JNICALL
 Java_com_lkxiaojian_lkplayerlibrary_LkPlayer_native_1prepare(JNIEnv *env, jobject thiz,
                                                              jstring url) {
     const char *path = env->GetStringUTFChars(url, nullptr);
-    JavaCallHelper *javaCallHelper=new JavaCallHelper();
-    LkFfmpage *lkFfmpage=new LkFfmpage(javaCallHelper,const_cast<char *>(path));
-//    lkFfmpage->prepare();
+    auto *javaCallHelper=new JavaCallHelper();
+    auto *lkFfmpage=new LkFfmpage(javaCallHelper,const_cast<char *>(path));
+    lkFfmpage->prepare();
     return nullptr;
 }
 

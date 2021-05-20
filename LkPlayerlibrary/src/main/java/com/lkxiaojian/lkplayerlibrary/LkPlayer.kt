@@ -3,6 +3,7 @@ package com.lkxiaojian.lkplayerlibrary
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import com.lkxiaojian.lkplayerlibrary.`interface`.PlayListener
 
 /**
  *create_time : 2021/5/13 下午5:40
@@ -16,6 +17,7 @@ class LkPlayer : SurfaceHolder.Callback {
         }
     }
 
+    private var playListener: PlayListener? = null
     private var surfaceHolder: SurfaceHolder? = null
     private lateinit var surfaceView: SurfaceView;
     fun setSurfaceView(surfaceView: SurfaceView) {
@@ -25,9 +27,10 @@ class LkPlayer : SurfaceHolder.Callback {
         this.surfaceHolder?.addCallback(this)
     }
 
-    fun start(path:String){
+    fun start(path: String) {
         this.surfaceHolder?.let {
-            native_startPlay(path, it.surface)
+//            native_startPlay(path, it.surface)
+            native_prepare(path)
         }
 
     }
@@ -44,7 +47,17 @@ class LkPlayer : SurfaceHolder.Callback {
     override fun surfaceDestroyed(holder: SurfaceHolder) {
     }
 
+
+    fun setPlayListener(listener: PlayListener) {
+        this.playListener = listener
+    }
+
+    fun onPlayError(message: String, code: Int) {
+        playListener?.onError(message, code)
+    }
+
+
     external fun native_startPlay(url: String, surfaceView: Surface): String
 
-    external fun native_prepare(url: String):String
+    external fun native_prepare(url: String): String
 }

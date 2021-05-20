@@ -4,11 +4,17 @@
 
 #ifndef LKPLAYER_LKFFMPAGE_H
 #define LKPLAYER_LKFFMPAGE_H
-
-
+#include <cstring>
+#include <pthread.h>
 #include "JavaCallHelper.h"
 #include "VideoChannel.h"
-#include "AudioChannel.h"
+#include "myinclude/AudioChannel.h"
+#include "Macro.h"
+extern "C"{
+#include <libavformat/avformat.h>
+#include <libavutil/error.h>
+};
+
 
 class LkFfmpage {
 public:
@@ -17,12 +23,14 @@ public:
     ~LkFfmpage();
 
     void prepare();
+    void _prepare();
 
 private:
     JavaCallHelper *javaCallHelper = 0;
     AudioChannel *audioChannel = 0;
     VideoChannel *videoChannel = 0;
     char *dataSource;
+    pthread_t pid_prepare;
 
 };
 
