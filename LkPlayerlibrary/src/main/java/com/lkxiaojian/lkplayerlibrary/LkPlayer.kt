@@ -56,11 +56,14 @@ class LkPlayer : SurfaceHolder.Callback {
         playListener?.onError(errorMessage,errorCode)
     }
     fun onPrepared(){
+        native_start()
         playListener?.onPrepared()
+
     }
 
 
     external fun native_startPlay(url: String, surfaceView: Surface): String
 
     external fun native_prepare(url: String): String
+    external fun native_start():String
 }

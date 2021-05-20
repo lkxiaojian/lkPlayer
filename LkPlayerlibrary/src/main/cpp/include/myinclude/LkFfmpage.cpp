@@ -54,7 +54,7 @@ void LkFfmpage::_prepare() {
     if (ret) {
         //失败
         LOGE("打开媒体失败: %s", av_err2str(ret));
-        javaCallHelper->onError(THREAD_CHILD,av_err2str(ret) ,ret);
+        javaCallHelper->onError(THREAD_CHILD, av_err2str(ret), ret);
         return;
     }
 
@@ -102,11 +102,37 @@ void LkFfmpage::_prepare() {
 
     if (!videoChannel && !audioChannel) {
         LOGE("未获取到音视频流: %s", av_err2str(ret));
-        javaCallHelper->onError(THREAD_CHILD,av_err2str(ret) ,ret);
+        javaCallHelper->onError(THREAD_CHILD, av_err2str(ret), ret);
         return;
     }
     //准备播放，通知java层
     javaCallHelper->onPrepared(THREAD_CHILD);
+}
+
+/**
+ *  开始播放
+ * @param args
+ * @return
+ */
+void *task_start(void *args) {
+
+    LkFfmpage *ffmpage = static_cast<LkFfmpage *>(args);
+    ffmpage->_start();
+
+    return 0;
+}
+
+/**
+ *  开启子线程播放
+ */
+void LkFfmpage::start() {
+    pthread_create(&pid_start, nullptr, task_prepare, this);
+}
+
+/**
+ * 真正播放的逻辑
+ */
+void LkFfmpage::_start() {
 
 
 }

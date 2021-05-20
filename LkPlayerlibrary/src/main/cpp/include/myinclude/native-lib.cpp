@@ -123,3 +123,11 @@ Java_com_lkxiaojian_lkplayerlibrary_LkPlayer_native_1startPlay(JNIEnv *env, jobj
 
     return nullptr;
 }
+
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_lkxiaojian_lkplayerlibrary_LkPlayer_native_1start(JNIEnv *env, jobject thiz) {
+    //开始播放
+
+}
