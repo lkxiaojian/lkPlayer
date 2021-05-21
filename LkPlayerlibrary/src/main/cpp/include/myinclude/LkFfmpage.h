@@ -33,6 +33,8 @@ private:
     char *dataSource;
     pthread_t pid_prepare;
     pthread_t pid_start;
+    bool  isPlaying;
+    AVFormatContext *avFormatContext;
 };
 
 

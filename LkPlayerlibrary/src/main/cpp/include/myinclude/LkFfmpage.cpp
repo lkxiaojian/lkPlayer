@@ -45,7 +45,7 @@ void LkFfmpage::prepare() {
 void LkFfmpage::_prepare() {
     //打开输入
     avformat_network_init();
-    AVFormatContext *avFormatContext = avformat_alloc_context();
+    avFormatContext = avformat_alloc_context();
     AVDictionary *options = nullptr;
     av_dict_set(&options, "timeout", "1000000", 0);
 
@@ -93,10 +93,10 @@ void LkFfmpage::_prepare() {
         //判断流类型（音频还是视频）
         if (codecParameters->codec_type == AVMEDIA_TYPE_VIDEO) {
             //视频
-            videoChannel = new VideoChannel();
+            videoChannel = new VideoChannel(i);
         } else if (codecParameters->codec_type == AVMEDIA_TYPE_AUDIO) {
             //音频
-            audioChannel = new AudioChannel();
+            audioChannel = new AudioChannel(i);
         }
     }
 
@@ -116,7 +116,7 @@ void LkFfmpage::_prepare() {
  */
 void *task_start(void *args) {
 
-    LkFfmpage *ffmpage = static_cast<LkFfmpage *>(args);
+    auto *ffmpage = static_cast<LkFfmpage *>(args);
     ffmpage->_start();
 
     return 0;
@@ -126,13 +126,37 @@ void *task_start(void *args) {
  *  开启子线程播放
  */
 void LkFfmpage::start() {
-    pthread_create(&pid_start, nullptr, task_prepare, this);
+    isPlaying = true;
+    pthread_create(&pid_start, nullptr, task_start, this);
 }
 
 /**
  * 真正播放的逻辑
  */
 void LkFfmpage::_start() {
+    while (isPlaying) {
+        AVPacket *avPacket = av_packet_alloc();
+        int ret = av_read_frame(avFormatContext, avPacket);
+        if (!ret) {
+            if (videoChannel && avPacket->stream_index == videoChannel->id) {
+                videoChannel->packets.push(avPacket);
+            } else if (audioChannel && avPacket->stream_index == audioChannel->id) {
+//                audioChannel->frames.push()
+            }
+        } else if (ret == AVERROR_EOF) {
+//表示读完了
+//要考虑读完了，是否播放完了的情况
+        } else {
+            LOGE("读取音视频失败");
+            return;
+        }
+
+
+        isPlaying = false;
+        //停止解码音频 和视频
+
+
+    }
 
 
 }

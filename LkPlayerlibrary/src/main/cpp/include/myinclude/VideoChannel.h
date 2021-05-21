@@ -8,10 +8,12 @@
 
 #include "myinclude/BaseChannel.h"
 
-class VideoChannel: BaseChannel {
+class VideoChannel: public BaseChannel {
 public:
-    VideoChannel();
+    VideoChannel(int id);
     virtual ~VideoChannel();
+    void start();
+    void stop();
 
 };
 
