@@ -9,11 +9,18 @@ extern "C" {
 #include <libavutil/frame.h>
 };
 
+
 #include "safe_queue.h"
+extern "C"{
+#include <libavcodec/avcodec.h>
+#include <libavcodec/avcodec.h>
+#include <libswscale/swscale.h>
+#include <libavutil/imgutils.h>
+}
 
 class BaseChannel {
 public:
-     BaseChannel(int id);
+     BaseChannel(int id, AVCodecContext *codecContext);
 
     virtual ~BaseChannel();
 
@@ -26,6 +33,9 @@ public:
     int id;
     virtual void start()=0;
     virtual void stop()=0;
+    bool isPlaying= false;
+    AVCodecContext *avCodecContext;
+
 };
 
 

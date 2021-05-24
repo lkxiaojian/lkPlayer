@@ -26,8 +26,9 @@ void BaseChannel::releaseAVFrame(AVFrame **pFrame) {
     }
 }
 
-BaseChannel::BaseChannel(int id) {
+BaseChannel::BaseChannel(int id, AVCodecContext *codecContext) {
     this->id = id;
+    this->avCodecContext=codecContext;
     packets.setReleaseCallBack(releaseAVPacket);
     frames.setReleaseCallBack(releaseAVFrame);
 }

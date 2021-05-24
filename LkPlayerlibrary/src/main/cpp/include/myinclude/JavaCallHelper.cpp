@@ -12,8 +12,9 @@ JavaCallHelper::JavaCallHelper(JNIEnv *jniEnv_, jobject instance_, JavaVM *javaV
     this->jniEnv = jniEnv_;
     this->instance = jniEnv->NewGlobalRef(instance_);
     jclass clazz = jniEnv->GetObjectClass(instance);
-    jmd_error=jniEnv->GetMethodID(clazz,"onPlayError","(Ljava/lang/String;I)V");
     jmd_prepared = jniEnv->GetMethodID(clazz, "onPrepared", "()V");
+    jmd_error=jniEnv->GetMethodID(clazz,"onPlayError","(I)V");
+
 
 
 }
@@ -46,7 +47,7 @@ void JavaCallHelper::onError(int thread, char *message,int errCode) {
     } else {
         JNIEnv *env_child = nullptr;
         javaVm->AttachCurrentThread(&env_child, nullptr);
-        env_child->CallVoidMethod(instance, jmd_error,&message,errCode);
+        env_child->CallVoidMethod(instance, jmd_error,errCode);
         javaVm->DetachCurrentThread();
     }
 }

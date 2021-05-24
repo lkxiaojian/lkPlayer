@@ -21,7 +21,7 @@ class LkPlayer : SurfaceHolder.Callback {
     private var surfaceHolder: SurfaceHolder? = null
     private lateinit var surfaceView: SurfaceView;
     fun setSurfaceView(surfaceView: SurfaceView) {
-        this.surfaceView = surfaceView;
+        this.surfaceView = surfaceView
         this.surfaceHolder?.removeCallback(this)
         this.surfaceHolder = surfaceView.holder
         this.surfaceHolder?.addCallback(this)
@@ -40,8 +40,12 @@ class LkPlayer : SurfaceHolder.Callback {
 
     }
 
+    /**
+     * 画布刷新
+     */
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        this.surfaceHolder = holder
+//        this.surfaceHolder = holder
+        setSurfaceNative(holder.surface)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
@@ -52,18 +56,22 @@ class LkPlayer : SurfaceHolder.Callback {
         this.playListener = listener
     }
 
-    fun onPlayError(errorMessage:String, errorCode: Int) {
-        playListener?.onError(errorMessage,errorCode)
-    }
-    fun onPrepared(){
-        native_start()
-        playListener?.onPrepared()
 
+
+    //################ native 调用 ##########
+    fun onPlayError(errorCode: Int) {
+        playListener?.onError(errorCode)
+    }
+
+    fun onPrepared() {
+        playListener?.onPrepared()
+//        native_start()
     }
 
 
     external fun native_startPlay(url: String, surfaceView: Surface): String
 
     external fun native_prepare(url: String): String
-    external fun native_start():String
+    external fun native_start(): String
+    external fun setSurfaceNative(surface: Surface):String
 }

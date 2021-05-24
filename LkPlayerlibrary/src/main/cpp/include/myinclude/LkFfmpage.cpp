@@ -44,7 +44,7 @@ void LkFfmpage::prepare() {
 
 void LkFfmpage::_prepare() {
     //打开输入
-    avformat_network_init();
+//    avformat_network_init();
     avFormatContext = avformat_alloc_context();
     AVDictionary *options = nullptr;
     av_dict_set(&options, "timeout", "1000000", 0);
@@ -93,10 +93,11 @@ void LkFfmpage::_prepare() {
         //判断流类型（音频还是视频）
         if (codecParameters->codec_type == AVMEDIA_TYPE_VIDEO) {
             //视频
-            videoChannel = new VideoChannel(i);
+            videoChannel = new VideoChannel(i, avCodecContext);
+            videoChannel->setRenderCallBack(renderCallBack);
         } else if (codecParameters->codec_type == AVMEDIA_TYPE_AUDIO) {
             //音频
-            audioChannel = new AudioChannel(i);
+            audioChannel = new AudioChannel(i, avCodecContext);
         }
     }
 
@@ -127,6 +128,7 @@ void *task_start(void *args) {
  */
 void LkFfmpage::start() {
     isPlaying = true;
+    videoChannel->start();
     pthread_create(&pid_start, nullptr, task_start, this);
 }
 
@@ -146,18 +148,20 @@ void LkFfmpage::_start() {
         } else if (ret == AVERROR_EOF) {
 //表示读完了
 //要考虑读完了，是否播放完了的情况
+            LOGE("读取音视频 AVERROR_EOF ");
         } else {
             LOGE("读取音视频失败");
-            return;
+            break;
         }
-
-
-        isPlaying = false;
-        //停止解码音频 和视频
-
-
     }
 
+    isPlaying = false;
+    //停止解码音频 和视频
+    videoChannel->stop();
+    audioChannel->stop();
+}
 
+void LkFfmpage::setRenderCallBack(RenderCallBack back) {
+    this->renderCallBack = back;
 }
 

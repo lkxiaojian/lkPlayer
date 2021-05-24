@@ -41,14 +41,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         lkPlayer.setPlayListener(object : PlayListener {
-            override fun onError(errorMessage:String,errorCode: Int) {
-                Log.e("Tag", "tag-->errorCode $errorCode  $errorMessage  ${Thread.currentThread()}")
+            override fun onError(errorCode: Int) {
+                Log.e("Tag", "tag-->errorCode $errorCode   ${Thread.currentThread()}")
             }
 
             override fun onPrepared() {
                 Log.e("Tag", "tag-->准备播放${Thread.currentThread()}")
-
                 Toast.makeText(this@MainActivity, "准备播放", Toast.LENGTH_SHORT).show()
+                lkPlayer.native_start()
             }
 
         })

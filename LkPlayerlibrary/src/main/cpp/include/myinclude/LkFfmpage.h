@@ -4,13 +4,15 @@
 
 #ifndef LKPLAYER_LKFFMPAGE_H
 #define LKPLAYER_LKFFMPAGE_H
+
 #include <cstring>
 #include <pthread.h>
 #include "JavaCallHelper.h"
 #include "VideoChannel.h"
 #include "myinclude/AudioChannel.h"
 #include "Macro.h"
-extern "C"{
+
+extern "C" {
 #include <libavformat/avformat.h>
 #include <libavutil/error.h>
 };
@@ -23,9 +25,15 @@ public:
     ~LkFfmpage();
 
     void prepare();
+
     void _prepare();
+
     void start();
+
     void _start();
+
+    void setRenderCallBack(RenderCallBack renderCallBack);
+
 private:
     JavaCallHelper *javaCallHelper = 0;
     AudioChannel *audioChannel = 0;
@@ -33,8 +41,11 @@ private:
     char *dataSource;
     pthread_t pid_prepare;
     pthread_t pid_start;
-    bool  isPlaying;
+    bool isPlaying;
     AVFormatContext *avFormatContext;
+    RenderCallBack renderCallBack;
+
+
 };
 
 
