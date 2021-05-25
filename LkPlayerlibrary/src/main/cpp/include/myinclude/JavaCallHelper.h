@@ -16,7 +16,7 @@ public:
 
     void onPrepared(int i);
 
-    void onError(int Thread,char *message,int errCode);
+    void onError(int Thread,int errCode);
 
 private:
     JNIEnv *jniEnv;

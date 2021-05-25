@@ -7,12 +7,17 @@
 
 
 #include "myinclude/BaseChannel.h"
+extern "C" {
+#include <libswscale/swscale.h>
+#include <libavutil/imgutils.h>
+#include <libavutil//time.h>
+};
 
 typedef void (*RenderCallBack) (uint8_t *, int, int, int);
 class VideoChannel: public BaseChannel {
 
 public:
-    VideoChannel(int id, AVCodecContext *avCodecContext);
+    VideoChannel(int id, AVCodecContext *avCodecContext,int fps);
     virtual ~VideoChannel();
     void start();
     void stop();
@@ -25,6 +30,7 @@ private:
     pthread_t  pid_video_decode;
     pthread_t  pid_video_play;
     RenderCallBack renderCallBack;
+    int fps;
 };
 
 

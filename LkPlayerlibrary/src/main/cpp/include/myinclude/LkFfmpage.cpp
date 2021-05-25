@@ -44,20 +44,20 @@ void LkFfmpage::prepare() {
 
 void LkFfmpage::_prepare() {
     //打开输入
-//    avformat_network_init();
+    avformat_network_init();
     avFormatContext = avformat_alloc_context();
     AVDictionary *options = nullptr;
-    av_dict_set(&options, "timeout", "1000000", 0);
+    av_dict_set(&options, "timeout", "3000000", 0);
 
     int ret = avformat_open_input(&avFormatContext, dataSource, nullptr, &options);
     av_dict_free(&options);
     if (ret) {
         //失败
         LOGE("打开媒体失败: %s", av_err2str(ret));
-        javaCallHelper->onError(THREAD_CHILD, av_err2str(ret), ret);
+        javaCallHelper->onError(THREAD_CHILD,  ret);
         return;
     }
-
+//查找媒体中的流信息
     ret = avformat_find_stream_info(avFormatContext, nullptr);
 
     if (ret) {
@@ -79,6 +79,11 @@ void LkFfmpage::_prepare() {
         }
         //获取解码器的上下文参数
         AVCodecContext *avCodecContext = avcodec_alloc_context3(avCodec);
+        if(!avCodecContext){
+            LOGE("创建解码器上下文失败");
+            javaCallHelper->onError(THREAD_CHILD,FFMPEG_ALLOC_CODEC_CONTEXT_FAIL);
+
+        }
         ret = avcodec_parameters_to_context(avCodecContext, codecParameters);
         if (ret) {
             LOGE("获取解码器上下文失败: %s", av_err2str(ret));
@@ -93,7 +98,11 @@ void LkFfmpage::_prepare() {
         //判断流类型（音频还是视频）
         if (codecParameters->codec_type == AVMEDIA_TYPE_VIDEO) {
             //视频
-            videoChannel = new VideoChannel(i, avCodecContext);
+
+            AVRational avRational = stream->r_frame_rate;
+            int fps = av_q2d(avRational);
+
+            videoChannel = new VideoChannel(i, avCodecContext,fps);
             videoChannel->setRenderCallBack(renderCallBack);
         } else if (codecParameters->codec_type == AVMEDIA_TYPE_AUDIO) {
             //音频
@@ -103,7 +112,7 @@ void LkFfmpage::_prepare() {
 
     if (!videoChannel && !audioChannel) {
         LOGE("未获取到音视频流: %s", av_err2str(ret));
-        javaCallHelper->onError(THREAD_CHILD, av_err2str(ret), ret);
+        javaCallHelper->onError(THREAD_CHILD,  ret);
         return;
     }
     //准备播放，通知java层
@@ -137,6 +146,10 @@ void LkFfmpage::start() {
  */
 void LkFfmpage::_start() {
     while (isPlaying) {
+        if(videoChannel->packets.size()>100){
+            av_usleep(10*1000);
+            continue;
+        }
         AVPacket *avPacket = av_packet_alloc();
         int ret = av_read_frame(avFormatContext, avPacket);
         if (!ret) {

@@ -19,12 +19,12 @@ pthread_mutex_t  mutex = PTHREAD_MUTEX_INITIALIZER;
 LkFfmpage *lkFfmpage = 0;
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     javaVm = vm;
-    return JNI_VERSION_1_6;
+    return JNI_VERSION_1_4;
 }
 
 void renderFrame(uint8_t *src_data, int src_lineSize, int width, int height) {
     pthread_mutex_lock(&mutex);
-    if (window) {
+    if (!window) {
         ANativeWindow_release(window);
         return;
     }
@@ -183,6 +183,6 @@ Java_com_lkxiaojian_lkplayerlibrary_LkPlayer_setSurfaceNative(JNIEnv *env, jobje
 //创建新的窗口用于视频显示
     window = ANativeWindow_fromSurface(env, surface);
     pthread_mutex_unlock(&mutex);
-    return 0;
+    return nullptr;
 
 }

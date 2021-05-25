@@ -14,8 +14,6 @@ extern "C" {
 extern "C"{
 #include <libavcodec/avcodec.h>
 #include <libavcodec/avcodec.h>
-#include <libswscale/swscale.h>
-#include <libavutil/imgutils.h>
 }
 
 class BaseChannel {
@@ -34,7 +32,7 @@ public:
     virtual void start()=0;
     virtual void stop()=0;
     bool isPlaying= false;
-    AVCodecContext *avCodecContext;
+    AVCodecContext *avCodecContext= nullptr;
 
 };
 

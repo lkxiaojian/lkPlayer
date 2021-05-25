@@ -9,9 +9,10 @@
 #include "Macro.h"
 
 
-VideoChannel::VideoChannel(int id, AVCodecContext *avCodecContext) : BaseChannel(id,
-                                                                                 avCodecContext) {
+VideoChannel::VideoChannel(int id, AVCodecContext *avCodecContext, int fps) : BaseChannel(id,
+                                                                                          avCodecContext) {
 
+    this->fps = fps;
 }
 
 VideoChannel::~VideoChannel() {
@@ -50,7 +51,7 @@ void VideoChannel::start() {
  * 视频解码
  */
 void VideoChannel::start_decode() {
-    AVPacket *packet = 0;
+    AVPacket *packet = nullptr;
     while (isPlaying) {
         int ret = packets.pop(packet);
         if (!isPlaying) {
@@ -72,14 +73,18 @@ void VideoChannel::start_decode() {
         AVFrame *avFrame = av_frame_alloc();
         ret = avcodec_receive_frame(avCodecContext, avFrame);
         LOGE("av_err2str--->%s", av_err2str(ret));
-        if (ret == AVERROR(EINVAL)) {
+        if (ret == AVERROR(EAGAIN)) {
             //重来
             continue;
         } else if (ret != 0) {
             break;
         }
-
         //ret=0 数据收发正常。成功获取视频原始数据包
+        while (isPlaying && frames.size() > 100) {
+            av_usleep(10 * 1000);
+            continue;
+        }
+
         frames.push(avFrame);
     }
 
@@ -100,6 +105,10 @@ void VideoChannel::start_play() {
     //给dst_data det_linesize 申请内存
     av_image_alloc(dst_data, det_linesize, avCodecContext->width, avCodecContext->height,
                    AV_PIX_FMT_RGBA, 1);
+
+    //sleep:fps>时间
+    double delay_time_per_frame = 1.0 / fps;
+
     while (isPlaying) {
         int ret = frames.pop(avFrame);
         if (!isPlaying) {
@@ -115,6 +124,10 @@ void VideoChannel::start_play() {
         //取到了yuv原始数据，进行格式转换
         sws_scale(swsContext, avFrame->data, avFrame->linesize, 0, avCodecContext->height, dst_data,
                   det_linesize);
+        //进行休眠
+        double extra_delay = avFrame->repeat_pict / (2 * fps);
+        av_usleep((delay_time_per_frame + extra_delay) * 1000000);
+
         //dst_data :AV_PIX_FMT_RGBA格式的数据
         //渲染，回调出去 native-lib
         renderCallBack(dst_data[0], det_linesize[0], avCodecContext->width, avCodecContext->height);
@@ -124,6 +137,7 @@ void VideoChannel::start_play() {
     isPlaying = false;
     av_free(&dst_data[0]);
     sws_freeContext(swsContext);
+    return;
 
 }
 

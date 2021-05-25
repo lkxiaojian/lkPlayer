@@ -42,7 +42,7 @@ private:
     pthread_t pid_prepare;
     pthread_t pid_start;
     bool isPlaying;
-    AVFormatContext *avFormatContext;
+    AVFormatContext *avFormatContext= nullptr;
     RenderCallBack renderCallBack;
 
 

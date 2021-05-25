@@ -16,14 +16,13 @@ import java.io.File
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-
+   private val lkPlayer = LkPlayer()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val lkPlayer = LkPlayer()
-        lkPlayer.setSurfaceView(binding.surfaceView)
+
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -40,6 +39,9 @@ class MainActivity : AppCompatActivity() {
             );
         }
 
+        val file = File(Environment.getExternalStorageDirectory(), "input.mp4")
+        lkPlayer.setSurfaceView(binding.surfaceView)
+        lkPlayer.setDataSource(file.path)
         lkPlayer.setPlayListener(object : PlayListener {
             override fun onError(errorCode: Int) {
                 Log.e("Tag", "tag-->errorCode $errorCode   ${Thread.currentThread()}")
@@ -53,13 +55,18 @@ class MainActivity : AppCompatActivity() {
 
         })
         binding.abtStart.setOnClickListener {
-            val file = File(Environment.getExternalStorageDirectory(), "input.mp4")
+
             Log.e("tag", "file--" + file.exists())
-            lkPlayer.start(file.path)
+            lkPlayer.prepare()
+//            lkPlayer.start()
         }
 
 
     }
 
+    override fun onResume() {
+        super.onResume()
+
+    }
 
 }

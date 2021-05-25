@@ -21,7 +21,8 @@ public:
     };
 
     ~SafeQueue() {
-
+        pthread_mutex_destroy(&mutex);
+        pthread_cond_destroy(&cond);
     };
 
 /**
@@ -41,7 +42,6 @@ public:
 
         }
         pthread_mutex_unlock(&mutex);
-//        q.push(value);
     }
 
 /**
@@ -57,7 +57,7 @@ public:
             pthread_cond_wait(&cond, &mutex);
         }
         if (!q.empty()) {
-            q.front();
+            value= q.front();
             //弹出
             q.pop();
             ret = 1;

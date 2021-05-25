@@ -41,9 +41,9 @@ void JavaCallHelper::onPrepared(int thread) {
 
 
 
-void JavaCallHelper::onError(int thread, char *message,int errCode) {
+void JavaCallHelper::onError(int thread,int errCode) {
     if (thread == THREAD_MAIN) {
-        jniEnv->CallVoidMethod(instance, jmd_error,&message,errCode);
+        jniEnv->CallVoidMethod(instance, jmd_error,errCode);
     } else {
         JNIEnv *env_child = nullptr;
         javaVm->AttachCurrentThread(&env_child, nullptr);
