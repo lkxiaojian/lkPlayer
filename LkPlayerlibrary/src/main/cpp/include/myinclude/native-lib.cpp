@@ -19,7 +19,7 @@ pthread_mutex_t  mutex = PTHREAD_MUTEX_INITIALIZER;
 LkFfmpage *lkFfmpage = 0;
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     javaVm = vm;
-    return JNI_VERSION_1_4;
+    return JNI_VERSION_1_6;
 }
 
 void renderFrame(uint8_t *src_data, int src_lineSize, int width, int height) {
@@ -46,8 +46,6 @@ void renderFrame(uint8_t *src_data, int src_lineSize, int width, int height) {
     }
     ANativeWindow_unlockAndPost(window);
     pthread_mutex_unlock(&mutex);
-
-
 }
 
 extern "C"

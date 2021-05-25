@@ -16,7 +16,8 @@ VideoChannel::VideoChannel(int id, AVCodecContext *avCodecContext, int fps) : Ba
 }
 
 VideoChannel::~VideoChannel() {
-
+    avcodec_free_context(&avCodecContext);
+    avCodecContext= nullptr;
 }
 
 void VideoChannel::stop() {
@@ -72,7 +73,7 @@ void VideoChannel::start_decode() {
         releaseAVPacket(&packet);
         AVFrame *avFrame = av_frame_alloc();
         ret = avcodec_receive_frame(avCodecContext, avFrame);
-        LOGE("av_err2str--->%s", av_err2str(ret));
+//        LOGE("av_err2str--->%s", av_err2str(ret));
         if (ret == AVERROR(EAGAIN)) {
             //重来
             continue;

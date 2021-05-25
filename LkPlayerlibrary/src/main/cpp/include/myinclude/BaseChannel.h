@@ -14,6 +14,7 @@ extern "C" {
 extern "C"{
 #include <libavcodec/avcodec.h>
 #include <libavcodec/avcodec.h>
+#include <libavutil//time.h>
 }
 
 class BaseChannel {

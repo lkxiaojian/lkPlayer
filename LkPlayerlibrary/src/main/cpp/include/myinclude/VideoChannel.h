@@ -10,7 +10,7 @@
 extern "C" {
 #include <libswscale/swscale.h>
 #include <libavutil/imgutils.h>
-#include <libavutil//time.h>
+
 };
 
 typedef void (*RenderCallBack) (uint8_t *, int, int, int);

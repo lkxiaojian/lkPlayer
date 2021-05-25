@@ -54,7 +54,7 @@ void LkFfmpage::_prepare() {
     if (ret) {
         //失败
         LOGE("打开媒体失败: %s", av_err2str(ret));
-        javaCallHelper->onError(THREAD_CHILD,  ret);
+        javaCallHelper->onError(THREAD_CHILD, ret);
         return;
     }
 //查找媒体中的流信息
@@ -79,9 +79,9 @@ void LkFfmpage::_prepare() {
         }
         //获取解码器的上下文参数
         AVCodecContext *avCodecContext = avcodec_alloc_context3(avCodec);
-        if(!avCodecContext){
+        if (!avCodecContext) {
             LOGE("创建解码器上下文失败");
-            javaCallHelper->onError(THREAD_CHILD,FFMPEG_ALLOC_CODEC_CONTEXT_FAIL);
+            javaCallHelper->onError(THREAD_CHILD, FFMPEG_ALLOC_CODEC_CONTEXT_FAIL);
 
         }
         ret = avcodec_parameters_to_context(avCodecContext, codecParameters);
@@ -102,7 +102,7 @@ void LkFfmpage::_prepare() {
             AVRational avRational = stream->r_frame_rate;
             int fps = av_q2d(avRational);
 
-            videoChannel = new VideoChannel(i, avCodecContext,fps);
+            videoChannel = new VideoChannel(i, avCodecContext, fps);
             videoChannel->setRenderCallBack(renderCallBack);
         } else if (codecParameters->codec_type == AVMEDIA_TYPE_AUDIO) {
             //音频
@@ -112,7 +112,7 @@ void LkFfmpage::_prepare() {
 
     if (!videoChannel && !audioChannel) {
         LOGE("未获取到音视频流: %s", av_err2str(ret));
-        javaCallHelper->onError(THREAD_CHILD,  ret);
+        javaCallHelper->onError(THREAD_CHILD, ret);
         return;
     }
     //准备播放，通知java层
@@ -138,6 +138,7 @@ void *task_start(void *args) {
 void LkFfmpage::start() {
     isPlaying = true;
     videoChannel->start();
+    audioChannel->start();
     pthread_create(&pid_start, nullptr, task_start, this);
 }
 
@@ -146,8 +147,8 @@ void LkFfmpage::start() {
  */
 void LkFfmpage::_start() {
     while (isPlaying) {
-        if(videoChannel->packets.size()>100){
-            av_usleep(10*1000);
+        if (videoChannel->packets.size() > 100) {
+            av_usleep(10 * 1000);
             continue;
         }
         AVPacket *avPacket = av_packet_alloc();
@@ -156,13 +157,14 @@ void LkFfmpage::_start() {
             if (videoChannel && avPacket->stream_index == videoChannel->id) {
                 videoChannel->packets.push(avPacket);
             } else if (audioChannel && avPacket->stream_index == audioChannel->id) {
-//                audioChannel->frames.push()
+                audioChannel->packets.push(avPacket);
             }
         } else if (ret == AVERROR_EOF) {
-//表示读完了
-//要考虑读完了，是否播放完了的情况
+            //表示读完了
+            //要考虑读完了，是否播放完了的情况
             LOGE("读取音视频 AVERROR_EOF ");
         } else {
+            javaCallHelper->onError(THREAD_CHILD, FFMPEG_READ_PACKETS_FAIL);
             LOGE("读取音视频失败");
             break;
         }
