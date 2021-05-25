@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
             override fun onPrepared() {
                 Log.e("Tag", "tag-->准备播放${Thread.currentThread()}")
                 Toast.makeText(this@MainActivity, "准备播放", Toast.LENGTH_SHORT).show()
-                lkPlayer.native_start()
+                lkPlayer.nativeStart()
             }
 
         })

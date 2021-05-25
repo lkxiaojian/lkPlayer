@@ -29,7 +29,8 @@ class LkPlayer : SurfaceHolder.Callback {
     }
 
     fun start() {
-        native_start()
+        nativeStart()
+//        native_start()
     }
 
     fun setDataSource(path: String) {
@@ -37,7 +38,8 @@ class LkPlayer : SurfaceHolder.Callback {
     }
 
     fun prepare() {
-        native_prepare(dataSource)
+//        native_prepare(dataSource)
+        nativePrepare(dataSource)
     }
 
 
@@ -72,9 +74,10 @@ class LkPlayer : SurfaceHolder.Callback {
     }
 
 
-    external fun native_startPlay(url: String, surfaceView: Surface): String
-
-    external fun native_prepare(url: String): String
-    external fun native_start(): String
+//    external fun native_startPlay(url: String, surfaceView: Surface): String
+//    external fun native_prepare(url: String): String
+//    external fun native_start(): String
     external fun setSurfaceNative(surface: Surface): String
+    external fun nativePrepare(url: String):String
+    external fun nativeStart():String
 }
