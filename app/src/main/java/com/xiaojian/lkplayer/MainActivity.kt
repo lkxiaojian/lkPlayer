@@ -16,7 +16,7 @@ import java.io.File
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-   private val lkPlayer = LkPlayer()
+    private val lkPlayer = LkPlayer()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
 
         val file = File(Environment.getExternalStorageDirectory(), "input.mp4")
         lkPlayer.setSurfaceView(binding.surfaceView)
+//        val p="https://v-cdn.zjol.com.cn/280443.mp4"
         lkPlayer.setDataSource(file.path)
         lkPlayer.setPlayListener(object : PlayListener {
             override fun onError(errorCode: Int) {

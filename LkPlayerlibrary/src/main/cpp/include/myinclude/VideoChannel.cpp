@@ -174,7 +174,7 @@ void VideoChannel::start_play() {
         } else {
             double audioTime = audioChannel->audio_time;
             double time_diff = video_time - audioTime;
-            LOGE("视频比音频快：%lf", fabs(time_diff));
+//            LOGE("视频比音频快：%lf", fabs(time_diff));
             if (time_diff > 0) {
                 //视频比音频快
                 //seek 后 time_diff 的值会很大

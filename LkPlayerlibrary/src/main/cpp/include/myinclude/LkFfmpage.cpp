@@ -45,6 +45,8 @@ void LkFfmpage::prepare() {
 void LkFfmpage::_prepare() {
     //打开输入
     avformat_network_init();
+//    av_register_all();
+
     avFormatContext = avformat_alloc_context();
     AVDictionary *options = nullptr;
     av_dict_set(&options, "timeout", "3000000", 0);
@@ -154,6 +156,10 @@ void LkFfmpage::start() {
 void LkFfmpage::_start() {
     while (isPlaying) {
         if (videoChannel->packets.size() > 100) {
+            av_usleep(10 * 1000);
+            continue;
+        }
+        if (audioChannel->packets.size() > 100) {
             av_usleep(10 * 1000);
             continue;
         }
