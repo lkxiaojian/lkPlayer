@@ -14,6 +14,8 @@ template<typename T>
 class SafeQueue {
     typedef void (*ReleaseCallBack)(T *);
 
+    typedef void (*SyncOpt )(queue<T> &);
+
 public:
     SafeQueue() {
         pthread_mutex_init(&mutex, 0);
@@ -57,7 +59,7 @@ public:
             pthread_cond_wait(&cond, &mutex);
         }
         if (!q.empty()) {
-            value= q.front();
+            value = q.front();
             //弹出
             q.pop();
             ret = 1;
@@ -116,12 +118,28 @@ public:
         this->releaseCallBack = releaseCallBack;
     }
 
+    void setSyncOpt(SyncOpt syncOpt) {
+        this->syncOpt = syncOpt;
+    }
+
+    /**
+     * 同步操作
+     */
+    void sync() {
+        pthread_mutex_lock(&mutex);
+
+
+        pthread_mutex_unlock(&mutex);
+    }
+
+
 private:
     queue<T> q;
     pthread_mutex_t mutex;
     pthread_cond_t cond;
     int work;//标记队列是否工作
     ReleaseCallBack releaseCallBack;
+    SyncOpt syncOpt;
 
 };
 

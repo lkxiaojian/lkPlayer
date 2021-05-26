@@ -19,7 +19,7 @@ extern "C"{
 
 class BaseChannel {
 public:
-     BaseChannel(int id, AVCodecContext *codecContext);
+     BaseChannel(int id, AVCodecContext *codecContext,AVRational time_base);
 
     virtual ~BaseChannel();
 
@@ -34,6 +34,8 @@ public:
     virtual void stop()=0;
     bool isPlaying= false;
     AVCodecContext *avCodecContext= nullptr;
+    AVRational time_base;
+    double audio_time;
 
 };
 

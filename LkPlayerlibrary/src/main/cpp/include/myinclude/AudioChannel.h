@@ -15,7 +15,7 @@ extern "C"{
 
 class AudioChannel: public BaseChannel {
 public:
-    AudioChannel(int id, AVCodecContext *avCodecContext);
+    AudioChannel(int id, AVCodecContext *avCodecContext,AVRational time_base);
     virtual ~AudioChannel();
     void start();
     void stop();
@@ -31,6 +31,7 @@ public:
     int out_sampleSize;
     int out_sampleRate;
     int out_buffers_size;
+
 
 
 private:
@@ -49,6 +50,7 @@ private:
     SLPlayItf bqPlayerPlay =0;
     //播放器队列接口
     SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue = 0;
+    SwrContext *swrContext=0;
 
 };
 

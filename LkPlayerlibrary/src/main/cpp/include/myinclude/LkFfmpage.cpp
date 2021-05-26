@@ -96,17 +96,18 @@ void LkFfmpage::_prepare() {
             return;
         }
         //判断流类型（音频还是视频）
+        AVRational time_base = stream->time_base;
         if (codecParameters->codec_type == AVMEDIA_TYPE_VIDEO) {
             //视频
-
+            //采样率
             AVRational avRational = stream->r_frame_rate;
             int fps = av_q2d(avRational);
 
-            videoChannel = new VideoChannel(i, avCodecContext, fps);
+            videoChannel = new VideoChannel(i, avCodecContext, fps, time_base);
             videoChannel->setRenderCallBack(renderCallBack);
         } else if (codecParameters->codec_type == AVMEDIA_TYPE_AUDIO) {
             //音频
-            audioChannel = new AudioChannel(i, avCodecContext);
+            audioChannel = new AudioChannel(i, avCodecContext, time_base);
         }
     }
 
@@ -137,8 +138,13 @@ void *task_start(void *args) {
  */
 void LkFfmpage::start() {
     isPlaying = true;
-    videoChannel->start();
-    audioChannel->start();
+    if (videoChannel) {
+        videoChannel->setAudioChannel(audioChannel);
+        videoChannel->start();
+    }
+    if (audioChannel) {
+        audioChannel->start();
+    }
     pthread_create(&pid_start, nullptr, task_start, this);
 }
 

@@ -6,8 +6,9 @@
 #include "Macro.h"
 
 
-AudioChannel::AudioChannel(int id, AVCodecContext *avCodecContext) : BaseChannel(id,
-                                                                                 avCodecContext) {
+AudioChannel::AudioChannel(int id, AVCodecContext *avCodecContext, AVRational time_base)
+        : BaseChannel(id,
+                      avCodecContext, time_base) {
     out_channels = av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);
     out_sampleSize = av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
     out_sampleRate = 44100;
@@ -16,9 +17,23 @@ AudioChannel::AudioChannel(int id, AVCodecContext *avCodecContext) : BaseChannel
     out_buffers = static_cast<uint8_t *>(malloc(out_buffers_size));
     memset(out_buffers, 0, out_buffers_size);
 
+
+    swrContext = swr_alloc_set_opts(nullptr, AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_S16,
+                                    out_sampleRate, avCodecContext->channel_layout,
+                                    avCodecContext->sample_fmt,
+                                    avCodecContext->sample_rate,
+                                    0, nullptr);
+    //初始化重采样上下文
+    swr_init(swrContext);
+
 }
 
 AudioChannel::~AudioChannel() {
+    if (swrContext) {
+        swr_free(&swrContext);
+        swrContext = nullptr;
+    }
+    DELETE(out_buffers)
 
 }
 
@@ -26,12 +41,13 @@ void *task_audio_decode(void *args) {
     auto *audioChannel = static_cast<AudioChannel *>(args);
 
     audioChannel->start_audio_decode();
+    return nullptr;
 }
 
 void *task_audio_play(void *args) {
     auto *audioChannel = static_cast<AudioChannel *>(args);
     audioChannel->start_audio_play();
-    return 0;
+    return nullptr;
 }
 
 void AudioChannel::start() {
@@ -44,7 +60,7 @@ void AudioChannel::start() {
 
 void AudioChannel::stop() {
     avcodec_free_context(&avCodecContext);
-    avCodecContext= nullptr;
+    avCodecContext = nullptr;
 }
 
 /**
@@ -91,7 +107,7 @@ void AudioChannel::start_audio_decode() {
 
 //4.3 创建回调函数
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
-    AudioChannel *audioChannel = static_cast<AudioChannel *>(context);
+    auto *audioChannel = static_cast<AudioChannel *>(context);
     int pcm_size = audioChannel->getPCM();
     if (pcm_size > 0) {
         (*bq)->Enqueue(bq, audioChannel->out_buffers, pcm_size);
@@ -107,7 +123,7 @@ void AudioChannel::start_audio_play() {
     */
     SLresult result;
     // 1.1 创建引擎对象：SLObjectItf engineObject
-    result = slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL);
+    result = slCreateEngine(&engineObject, 0, nullptr, 0, nullptr, nullptr);
     if (SL_RESULT_SUCCESS != result) {
         return;
     }
@@ -126,7 +142,7 @@ void AudioChannel::start_audio_play() {
      */
     // 2.1 创建混音器：SLObjectItf outputMixObject
     result = (*engineInterface)->CreateOutputMix(engineInterface, &outputMixObject, 0,
-                                                 0, 0);
+                                                 nullptr, nullptr);
     if (SL_RESULT_SUCCESS != result) {
         return;
     }
@@ -162,7 +178,7 @@ void AudioChannel::start_audio_play() {
     //3.2 配置音轨（输出）
     //设置混音器
     SLDataLocator_OutputMix loc_outmix = {SL_DATALOCATOR_OUTPUTMIX, outputMixObject};
-    SLDataSink audioSnk = {&loc_outmix, NULL};
+    SLDataSink audioSnk = {&loc_outmix, nullptr};
     //需要的接口 操作队列的接口
     const SLInterfaceID ids[1] = {SL_IID_BUFFERQUEUE};
     const SLboolean req[1] = {SL_BOOLEAN_TRUE};
@@ -207,14 +223,8 @@ void AudioChannel::start_audio_play() {
 int AudioChannel::getPCM() {
 
     int pcm_data_size = 0;
-    AVFrame *frame = 0;
-    SwrContext *swrContext = swr_alloc_set_opts(0, AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_S16,
-                                                out_sampleRate, avCodecContext->channel_layout,
-                                                avCodecContext->sample_fmt,
-                                                avCodecContext->sample_rate,
-                                                0, 0);
-    //初始化重采样上下文
-    swr_init(swrContext);
+    AVFrame *frame = nullptr;
+
 
     while (isPlaying) {
         int ret = frames.pop(frame);
@@ -226,7 +236,7 @@ int AudioChannel::getPCM() {
             //取数据包失败
             continue;
         }
-        LOGE("音频播放中");
+//        LOGE("音频播放中");
         //pcm数据在 frame中
         //这里获得的解码后pcm格式的音频原始数据，有可能与创建的播放器中设置的pcm格式不一样
         //重采样？example:resample
@@ -253,6 +263,7 @@ int AudioChannel::getPCM() {
 
         // 获取swr_convert转换后 out_samples个 *2 （16位）*2（双声道）
         pcm_data_size = out_samples * out_sampleSize * out_channels;
+        audio_time = frame->best_effort_timestamp * av_q2d(time_base);
         break;
 
     }//end while
