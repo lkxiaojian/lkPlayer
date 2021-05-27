@@ -4,6 +4,7 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.lkxiaojian.lkplayerlibrary.`interface`.PlayListener
+import com.lkxiaojian.lkplayerlibrary.`interface`.ProgressListener
 
 /**
  *create_time : 2021/5/13 下午5:40
@@ -18,6 +19,7 @@ class LkPlayer : SurfaceHolder.Callback {
     }
 
     private var playListener: PlayListener? = null
+    private var progressListener: ProgressListener? = null
     private var surfaceHolder: SurfaceHolder? = null
     private lateinit var surfaceView: SurfaceView
     private var dataSource = ""
@@ -42,16 +44,32 @@ class LkPlayer : SurfaceHolder.Callback {
         nativePrepare(dataSource)
     }
 
+    /**
+     * TODO 停止
+     *
+     */
+    fun stop() {
+        nativeStop()
+    }
+
+    /**
+     * TODO 释放资源
+     *
+     */
+    fun release() {
+        this.surfaceHolder?.removeCallback(this)
+        nativeRelease()
+
+    }
+
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-
     }
 
     /**
      * 画布刷新
      */
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-//        this.surfaceHolder = holder
         setSurfaceNative(holder.surface)
     }
 
@@ -63,8 +81,30 @@ class LkPlayer : SurfaceHolder.Callback {
         this.playListener = listener
     }
 
+    fun setProgressListener(listener: ProgressListener) {
+        this.progressListener = listener
+    }
 
-    //################ native 调用 ##########
+    /**
+     * TODO 获取视频的时长
+     *
+     * @return
+     */
+    fun getDuration(): Int {
+        return getNativeDuration()
+    }
+
+    /**
+     * TODO 设置播放的进度
+     *
+     * @param progress
+     */
+    fun seekTo(progress: Int) {
+        setNativeSeekTo(progress)
+    }
+
+
+    //################ native 调用 ###############
     fun onPlayError(errorCode: Int) {
         playListener?.onError(errorCode)
     }
@@ -73,11 +113,16 @@ class LkPlayer : SurfaceHolder.Callback {
         playListener?.onPrepared()
     }
 
+    fun setProgress(progress: Int) {
+        progressListener?.progress(progress)
+    }
 
-//    external fun native_startPlay(url: String, surfaceView: Surface): String
-//    external fun native_prepare(url: String): String
-//    external fun native_start(): String
+
     external fun setSurfaceNative(surface: Surface): String
-    external fun nativePrepare(url: String):String
-    external fun nativeStart():String
+    external fun nativePrepare(url: String): String
+    external fun nativeStart(): String
+    external fun nativeRelease()
+    external fun nativeStop()
+    external fun getNativeDuration():Int
+    external fun setNativeSeekTo(progress: Int)
 }

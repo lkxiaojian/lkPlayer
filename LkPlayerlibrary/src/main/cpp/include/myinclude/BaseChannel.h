@@ -4,22 +4,21 @@
 
 #ifndef LKPLAYER_BASECHANNEL_H
 #define LKPLAYER_BASECHANNEL_H
-extern "C" {
-#include <libavcodec/packet.h>
-#include <libavutil/frame.h>
-};
 
 
 #include "safe_queue.h"
+#include "JavaCallHelper.h"
 extern "C"{
 #include <libavcodec/avcodec.h>
 #include <libavcodec/avcodec.h>
-#include <libavutil//time.h>
+#include <libavutil/time.h>
+#include <libavcodec/packet.h>
+#include <libavutil/frame.h>
 }
 
 class BaseChannel {
 public:
-     BaseChannel(int id, AVCodecContext *codecContext,AVRational time_base);
+     BaseChannel(int id, AVCodecContext *codecContext,AVRational time_base,JavaCallHelper *javaCallHelper);
 
     virtual ~BaseChannel();
 
@@ -36,6 +35,7 @@ public:
     AVCodecContext *avCodecContext= nullptr;
     AVRational time_base;
     double audio_time;
+    JavaCallHelper *javaCallHelper=0;
 
 };
 

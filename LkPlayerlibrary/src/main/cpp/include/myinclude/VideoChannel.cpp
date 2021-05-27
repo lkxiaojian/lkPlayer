@@ -40,9 +40,9 @@ void dropAVFrame(queue<AVFrame *> &q) {
 }
 
 
-VideoChannel::VideoChannel(int id, AVCodecContext *avCodecContext, int fps, AVRational time_base)
+VideoChannel::VideoChannel(int id, AVCodecContext *avCodecContext, int fps, AVRational time_base,JavaCallHelper *javaCallHelper)
         : BaseChannel(id,
-                      avCodecContext, time_base) {
+                      avCodecContext, time_base,javaCallHelper) {
 
     this->fps = fps;
     packets.setSyncOpt(dropAVPacket);
@@ -55,14 +55,18 @@ VideoChannel::~VideoChannel() {
 }
 
 void VideoChannel::stop() {
-
+    isPlaying= false;
+    javaCallHelper= nullptr;
+    packets.setWork(0);
+    frames.setWork(0);
+    pthread_join(pid_video_decode, nullptr);
+    pthread_join(pid_video_play, nullptr);
 }
 
 
 void *video_play(void *args) {
     auto *videoChannel = static_cast<VideoChannel *>(args);
     videoChannel->start_play();
-
     return nullptr;
 }
 
@@ -161,9 +165,6 @@ void VideoChannel::start_play() {
                   det_linesize);
         //进行休眠
 
-
-
-
         double extra_delay = avFrame->repeat_pict / (2 * fps);
         double real_delay = delay_time_per_frame + extra_delay;
 //获取视频的事件
@@ -171,6 +172,9 @@ void VideoChannel::start_play() {
         if (!audioChannel) {
             //没有音频
             av_usleep((delay_time_per_frame + extra_delay) * 1000000);
+            if(javaCallHelper){
+                javaCallHelper->onProgress(THREAD_CHILD,video_time);
+            }
         } else {
             double audioTime = audioChannel->audio_time;
             double time_diff = video_time - audioTime;

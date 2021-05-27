@@ -3,12 +3,15 @@
 //
 
 #include "BaseChannel.h"
-#include "safe_queue.h"
-
 
 BaseChannel::~BaseChannel() {
     packets.clear();
     frames.clear();
+    if(avCodecContext){
+        avcodec_close(avCodecContext);
+        avcodec_free_context(&avCodecContext);
+        avCodecContext= nullptr;
+    }
 
 }
 
@@ -26,10 +29,11 @@ void BaseChannel::releaseAVFrame(AVFrame **pFrame) {
     }
 }
 
-BaseChannel::BaseChannel(int id, AVCodecContext *codecContext,AVRational time_base) {
+BaseChannel::BaseChannel(int id, AVCodecContext *codecContext,AVRational time_base,JavaCallHelper *javaCallHelper) {
     this->id = id;
     this->avCodecContext=codecContext;
     this->time_base=time_base;
+    this->javaCallHelper=javaCallHelper;
     packets.setReleaseCallBack(releaseAVPacket);
     frames.setReleaseCallBack(releaseAVFrame);
 }

@@ -17,6 +17,7 @@ public:
     void onPrepared(int i);
 
     void onError(int Thread,int errCode);
+    void onProgress(int Thread,int errCode);
 
 private:
     JNIEnv *jniEnv;
@@ -24,6 +25,7 @@ private:
     JavaVM *javaVm;
     jmethodID jmd_prepared;
     jmethodID jmd_error;
+    jmethodID jmd_progress;
 };
 
 

@@ -6,14 +6,14 @@
 #include "Macro.h"
 
 
-AudioChannel::AudioChannel(int id, AVCodecContext *avCodecContext, AVRational time_base)
+AudioChannel::AudioChannel(int id, AVCodecContext *avCodecContext, AVRational time_base,JavaCallHelper *javaCallHelper)
         : BaseChannel(id,
-                      avCodecContext, time_base) {
+                      avCodecContext, time_base,javaCallHelper) {
     out_channels = av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);
     out_sampleSize = av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
     out_sampleRate = 44100;
     //通道数* 采样率*2（16bit=2字节）
-    int out_buffers_size = out_channels * out_sampleRate * out_sampleSize;
+     out_buffers_size = out_channels * out_sampleRate * out_sampleSize;
     out_buffers = static_cast<uint8_t *>(malloc(out_buffers_size));
     memset(out_buffers, 0, out_buffers_size);
 
@@ -34,6 +34,10 @@ AudioChannel::~AudioChannel() {
         swrContext = nullptr;
     }
     DELETE(out_buffers)
+    if(avCodecContext){
+        avcodec_free_context(&avCodecContext);
+        avCodecContext = nullptr;
+    }
 
 }
 
@@ -59,8 +63,42 @@ void AudioChannel::start() {
 }
 
 void AudioChannel::stop() {
-    avcodec_free_context(&avCodecContext);
-    avCodecContext = nullptr;
+    isPlaying = false;
+    javaCallHelper = nullptr;
+    packets.setWork(0);
+    frames.setWork(0);
+    pthread_join(pid_audio_decode, nullptr);
+    pthread_join(pid_audio_play, nullptr);
+    if (swrContext) {
+        swr_free(&swrContext);
+        swrContext = 0;
+    }
+    /**
+    * 7、释放
+    */
+    //7.1 设置播放器状态为停止状态
+    if (bqPlayerPlay) {
+        (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_STOPPED);
+    }
+    //7.2 销毁播放器
+    if (bqPlayerObject) {
+        (*bqPlayerObject)->Destroy(bqPlayerObject);
+        bqPlayerObject = nullptr;
+        bqPlayerBufferQueue = nullptr;
+    }
+    //7.3 销毁混音器
+    if (outputMixObject) {
+        (*outputMixObject)->Destroy(outputMixObject);
+        outputMixObject = nullptr;
+    }
+    //7.4 销毁引擎
+    if (engineObject) {
+        (*engineObject)->Destroy(engineObject);
+        engineObject = nullptr;
+        engineInterface = nullptr;
+    }
+
+
 }
 
 /**
@@ -263,7 +301,11 @@ int AudioChannel::getPCM() {
 
         // 获取swr_convert转换后 out_samples个 *2 （16位）*2（双声道）
         pcm_data_size = out_samples * out_sampleSize * out_channels;
+        //获取音频时间
         audio_time = frame->best_effort_timestamp * av_q2d(time_base);
+        if(javaCallHelper){
+            javaCallHelper->onProgress(THREAD_CHILD,audio_time);
+        }
         break;
 
     }//end while

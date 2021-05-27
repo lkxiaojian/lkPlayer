@@ -19,7 +19,13 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 LkFfmpage *lkFfmpage = nullptr;
 static const char *mClassName = "com/lkxiaojian/lkplayerlibrary/LkPlayer";
 
-
+/**
+ *  渲染
+ * @param src_data
+ * @param src_lineSize
+ * @param width
+ * @param height
+ */
 void renderFrame(uint8_t *src_data, int src_lineSize, int width, int height) {
     pthread_mutex_lock(&mutex);
     if (!window) {
@@ -46,7 +52,63 @@ void renderFrame(uint8_t *src_data, int src_lineSize, int width, int height) {
     pthread_mutex_unlock(&mutex);
 }
 
+/**
+ *  资源释放
+ * @param env
+ * @param thiz
+ */
+void nativeRelease(JNIEnv *env, jobject thiz) {
+    pthread_mutex_lock(&mutex);
+    if (window) {
+        ANativeWindow_release(window);
+        window = nullptr;
+    }
+    pthread_mutex_unlock(&mutex);
+    DELETE(lkFfmpage);
 
+    return;
+}
+
+/**
+ *  停止
+ * @param env
+ * @param thiz
+ */
+void nativeStop(JNIEnv *env, jobject thiz) {
+    if (lkFfmpage) {
+        lkFfmpage->stop();
+    }
+
+}
+
+/**
+ * h获取总的时长
+ * @param env
+ * @param thiz
+ * @return
+ */
+jint getDuration(JNIEnv *env, jobject thiz) {
+    if (lkFfmpage) {
+        return lkFfmpage->getDuration();
+    }
+    return 0;
+}
+
+void setSeekTo(JNIEnv *env, jobject thiz, jint progress) {
+
+    if (lkFfmpage) {
+        lkFfmpage->setSeekToProgress(progress);
+    }
+    return;
+}
+
+/**
+ *  准备
+ * @param env
+ * @param thiz
+ * @param url
+ * @return
+ */
 jstring nativePrepare(JNIEnv *env, jobject thiz, jstring url) {
     const char *path = env->GetStringUTFChars(url, nullptr);
     auto *javaCallHelper = new JavaCallHelper(env, thiz, javaVm);
@@ -56,7 +118,9 @@ jstring nativePrepare(JNIEnv *env, jobject thiz, jstring url) {
     return nullptr;
 }
 
-
+/**
+ *  开始播放
+ */
 extern "C"
 JNIEXPORT jstring JNICALL
 nativeStart(JNIEnv *env, jobject thiz) {
@@ -66,6 +130,9 @@ nativeStart(JNIEnv *env, jobject thiz) {
     }
     return nullptr;
 }
+/**
+ * 设置surface
+ */
 extern "C"
 JNIEXPORT jstring JNICALL
 setSurfaceNative(JNIEnv *env, jobject thiz, jobject surface) {
@@ -80,11 +147,17 @@ setSurfaceNative(JNIEnv *env, jobject thiz, jobject surface) {
     return nullptr;
 
 }
-
+/**
+ * 动态注册方法
+ */
 static const JNINativeMethod mMethods[] = {
-        {"nativePrepare",    "(Ljava/lang/String;)Ljava/lang/String;",     (jstring *) nativePrepare},
-        {"setSurfaceNative", "(Landroid/view/Surface;)Ljava/lang/String;", (jstring *) setSurfaceNative},
-        {"nativeStart",      "()Ljava/lang/String;",                       (jstring *) nativeStart}
+        {"nativePrepare",     "(Ljava/lang/String;)Ljava/lang/String;",     (jstring *) nativePrepare},
+        {"setSurfaceNative",  "(Landroid/view/Surface;)Ljava/lang/String;", (jstring *) setSurfaceNative},
+        {"nativeStart",       "()Ljava/lang/String;",                       (jstring *) nativeStart},
+        {"nativeRelease",     "()V",                                        (void *) nativeRelease},
+        {"nativeStop",        "()V",                                        (void *) nativeStop},
+        {"getNativeDuration", "()I",                                        (jint *) getDuration},
+        {"setNativeSeekTo",   "(I)V",                                       (void *) setSeekTo}
 };
 
 
@@ -97,7 +170,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     }
 
     jclass nativeClass = env->FindClass(mClassName);
-    ret = env->RegisterNatives(nativeClass, mMethods, 3);
+    ret = env->RegisterNatives(nativeClass, mMethods, 7);
     if (ret != JNI_OK) {
         return -1;
     }

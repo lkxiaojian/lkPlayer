@@ -7,6 +7,7 @@
 
 
 #include "BaseChannel.h"
+#include "JavaCallHelper.h"
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
 extern "C"{
@@ -15,7 +16,7 @@ extern "C"{
 
 class AudioChannel: public BaseChannel {
 public:
-    AudioChannel(int id, AVCodecContext *avCodecContext,AVRational time_base);
+    AudioChannel(int id, AVCodecContext *avCodecContext,AVRational time_base,JavaCallHelper *javaCallHelper);
     virtual ~AudioChannel();
     void start();
     void stop();
@@ -35,8 +36,8 @@ public:
 
 
 private:
-    pthread_t  pid_audio_decode;
-    pthread_t  pid_audio_play;
+    pthread_t  pid_audio_decode{};
+    pthread_t  pid_audio_play{};
 
     //引擎
     SLObjectItf engineObject = 0;
@@ -51,7 +52,6 @@ private:
     //播放器队列接口
     SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue = 0;
     SwrContext *swrContext=0;
-
 };
 
 

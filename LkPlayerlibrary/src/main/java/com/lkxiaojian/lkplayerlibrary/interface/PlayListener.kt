@@ -10,3 +10,7 @@ interface PlayListener {
     fun onError(errorCode: Int)
     fun onPrepared()
 }
+
+interface ProgressListener {
+    fun progress(progress: Int)
+}
