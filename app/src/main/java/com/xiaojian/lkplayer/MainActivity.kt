@@ -5,6 +5,8 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import android.view.Window
+import android.view.WindowManager
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -15,6 +17,7 @@ import com.lkxiaojian.lkplayerlibrary.`interface`.ProgressListener
 import com.xiaojian.lkplayer.databinding.ActivityMainBinding
 import java.io.File
 
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -22,6 +25,8 @@ class MainActivity : AppCompatActivity() {
     private var isTouch = false
     private var isSeek = false
     override fun onCreate(savedInstanceState: Bundle?) {
+        val w: Window = this.window
+        w.setFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,0)
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
