@@ -25,8 +25,6 @@ class MainActivity : AppCompatActivity() {
     private var isTouch = false
     private var isSeek = false
     override fun onCreate(savedInstanceState: Bundle?) {
-        val w: Window = this.window
-        w.setFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,0)
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)

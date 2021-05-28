@@ -3,7 +3,6 @@ package com.lkxiaojian.lkplayerlibrary.view
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.SeekBar
@@ -18,7 +17,7 @@ import com.lkxiaojian.lkplayerlibrary.R
  */
 abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
     FrameLayout(context, attrs), View.OnTouchListener, View.OnClickListener {
-    private var view: View? = null
+     var baseView: View? = null
     private var restartOrPause: AppCompatImageView? = null
     private var aivFullScreen: AppCompatImageView? = null
     private var atvPosition: AppCompatTextView? = null
@@ -27,8 +26,7 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
     private var seekBar: SeekBar? = null
 
     init {
-        view = LayoutInflater.from(context).inflate(R.layout.controller_layout, null, false)
-        addView(view)
+        baseView = LayoutInflater.from(context).inflate(R.layout.controller_layout, null, false)
         findViewById()
         setViewListener()
     }
@@ -37,11 +35,11 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
      *  获取控件
      */
     fun findViewById() {
-        restartOrPause = view?.findViewById(R.id.restart_or_pause)
-        atvPosition = view?.findViewById(R.id.atv_position)
-        seekBar = view?.findViewById(R.id.seek)
-        atvDuration = view?.findViewById(R.id.atv_duration)
-        aivFullScreen = view?.findViewById(R.id.aiv_full_screen)
+        restartOrPause = baseView?.findViewById(R.id.restart_or_pause)
+        atvPosition = baseView?.findViewById(R.id.atv_position)
+        seekBar = baseView?.findViewById(R.id.seek)
+        atvDuration = baseView?.findViewById(R.id.atv_duration)
+        aivFullScreen = baseView?.findViewById(R.id.aiv_full_screen)
 
     }
 
