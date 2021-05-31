@@ -54,7 +54,7 @@ object PlayStatus {
     /**
      * 普通模式
      */
-    const val MODE_NORMAL = 10
+    var MODE_NORMAL = 10
 
     /**
      * 全屏模式

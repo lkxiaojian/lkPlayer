@@ -82,8 +82,9 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
 
     fun setPauseOrResume() {
 
-
     }
+
+
 
 
 }

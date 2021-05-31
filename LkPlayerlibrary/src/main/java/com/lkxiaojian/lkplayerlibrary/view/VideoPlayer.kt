@@ -1,18 +1,25 @@
 package com.lkxiaojian.lkplayerlibrary.view
 
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.util.AttributeSet
 import android.util.Log
 import android.view.*
 import android.widget.FrameLayout
 import android.widget.SeekBar
+import androidx.appcompat.widget.ContentFrameLayout
 import androidx.lifecycle.MutableLiveData
 import com.lkxiaojian.lkplayerlibrary.LkPlayer
 import com.lkxiaojian.lkplayerlibrary.R
 import com.lkxiaojian.lkplayerlibrary.`interface`.PlayListener
 import com.lkxiaojian.lkplayerlibrary.`interface`.ProgressListener
 import com.lkxiaojian.lkplayerlibrary.status.PlayStatus
+import com.lkxiaojian.lkplayerlibrary.status.PlayStatus.MODE_FULL_SCREEN
+import com.lkxiaojian.lkplayerlibrary.status.PlayStatus.MODE_NORMAL
+import com.lkxiaojian.lkplayerlibrary.status.PlayStatus.MODE_TINY_WINDOW
+import com.lkxiaojian.lkplayerlibrary.utlis.PlayerUtils
+import kotlinx.coroutines.delay
 
 
 /**
@@ -25,10 +32,11 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
     private val mContext = context
     private var mContainer: FrameLayout? = null
     private var mSurface: Surface? = null
-    private var mSurfaceView: SurfaceView? = null
+    private var mSurfaceView: CustomSurfaceView? = null
     private lateinit var player: LkPlayer
     private var mCurrentState = MutableLiveData<Int>()
     private var path = ""
+    private var mCurrentMode: Int = MODE_NORMAL
 
     init {
         init()
@@ -46,15 +54,13 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar) {
-
                 if (duration == 0) {
                     duration = getTotalDuration()
                 }
-
                 val i = seekBar.progress * duration / 100
                 isTouch = false
                 isSeek = true
-                mCurrentState.value=PlayStatus.STATE_PLAYING
+//                mCurrentState.value = PlayStatus.STATE_PLAYING
                 player.seekTo(i)
             }
         })
@@ -89,6 +95,7 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
         this.addView(mContainer, params)
         mContainer?.addView(baseView)
         initTextureView()
+
     }
 
     private fun initTextureView() {
@@ -110,6 +117,9 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
     fun start() {
         mCurrentState.value = PlayStatus.STATE_PREPARING
         addTextureView()
+        if (MODE_NORMAL == MODE_FULL_SCREEN) {
+            enterFullScreen()
+        }
         play()
     }
 
@@ -128,6 +138,10 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
                     PlayStatus.STATE_PLAYING
                 }
             }
+
+            R.id.aiv_full_screen -> {
+                enterFullScreen()
+            }
         }
     }
 
@@ -140,9 +154,12 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
         player.prepare()
         player.setPlayListener(object : PlayListener {
             override fun onError(errorCode: Int) {
-                //视频播放出错了
-                mCurrentState.value = PlayStatus.STATE_ERROR
-                Log.e(TAG, "errorCode-->$errorCode")
+                lauViewModel.launchUI {
+                    //视频播放出错了
+                    mCurrentState.value = PlayStatus.STATE_ERROR
+                    Log.e(TAG, "errorCode-->$errorCode")
+                }
+
             }
 
             override fun onPrepared() {
@@ -160,6 +177,33 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
     override fun progress(progress: Int) {
         setCurrentTimeTime(progress)
 
+    }
+
+    private fun enterFullScreen() {
+        lauViewModel.launchUI {
+            if (mCurrentMode == MODE_FULL_SCREEN) return@launchUI
+            // 隐藏ActionBar、状态栏，并横屏
+            PlayerUtils.hideActionBar(mContext)
+            PlayerUtils.scanForActivity(mContext)?.requestedOrientation =
+                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            val contentView = PlayerUtils.scanForActivity(mContext)
+                ?.findViewById<ContentFrameLayout>(android.R.id.content)
+            if (mCurrentMode == MODE_TINY_WINDOW) {
+                contentView?.removeView(mContainer)
+            } else {
+                removeView(mContainer)
+            }
+            delay(300)
+            val params = LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            contentView?.addView(mContainer, params)
+
+            mCurrentMode = MODE_FULL_SCREEN
+        }
+
+//        mController.onPlayModeChanged(mCurrentMode)
     }
 
     //#########  提供外部使用方法  ################
@@ -180,5 +224,17 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
     fun getTotalDuration(): Int {
         duration = player.getDuration()
         return duration
+    }
+
+    fun setFullScreen(flag: Boolean) {
+        MODE_NORMAL = if (flag) {
+            MODE_FULL_SCREEN
+        } else {
+            MODE_NORMAL
+        }
+    }
+
+    fun stop() {
+        player.stop()
     }
 }
