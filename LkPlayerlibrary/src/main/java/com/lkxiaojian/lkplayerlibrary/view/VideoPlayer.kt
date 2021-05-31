@@ -2,12 +2,17 @@ package com.lkxiaojian.lkplayerlibrary.view
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.SurfaceTexture
 import android.util.AttributeSet
 import android.util.Log
 import android.view.*
-import android.view.TextureView.SurfaceTextureListener
 import android.widget.FrameLayout
+import android.widget.SeekBar
+import com.lkxiaojian.lkplayerlibrary.LkPlayer
+import com.lkxiaojian.lkplayerlibrary.R
+import com.lkxiaojian.lkplayerlibrary.`interface`.PlayListener
+import com.lkxiaojian.lkplayerlibrary.`interface`.ProgressListener
+import com.lkxiaojian.lkplayerlibrary.status.PlayStatus
+
 
 /**
  * @Description:     java类作用描述
@@ -15,28 +20,50 @@ import android.widget.FrameLayout
  * @CreateDate:     2021/5/27 15:23
  */
 class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController(context, attrs),
-    SurfaceTextureListener {
+    ProgressListener {
     private val mContext = context
     private var mContainer: FrameLayout? = null
     private var mSurface: Surface? = null
-    private var mUrl: String? = null
-    private var mSurfaceTexture: SurfaceTexture? = null
-    private var mTextureView: CustomTextureView? = null
+    private var mSurfaceView: SurfaceView? = null
+    private lateinit var player: LkPlayer
+    private var mCurrentState: Int = PlayStatus.STATE_IDLE
+    private var path = ""
 
     init {
-//        if (mTextureView == null) {
-//            mTextureView = CustomTextureView(context)
-//            mTextureView?.surfaceTextureListener = this
-//        }
-//        this.addView(mTextureView)
-//        if (mSurface == null) {
-//            mSurface = Surface(mSurfaceTexture)
-//        }
         init()
+        setViewListen()
+
     }
 
+    private fun setViewListen() {
+        seekBar?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+                isTouch = true
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+
+                if(duration==0){
+                    duration= getTotalDuration()
+                }
+//                val progress = seekBar.progress
+//                val i1 = progress * duration
+//                Log.e(TAG,"i--ww>${progress} duration-->$duration  i1---$i1")
+                val i = seekBar.progress*duration/100
+                Log.e(TAG,"i-->$i")
+                isTouch = false
+                isSeek=true
+                player.seekTo(i)
+            }
+        })
+    }
 
     private fun init() {
+        player = LkPlayer.getInstance()
         mContainer = FrameLayout(mContext)
         mContainer?.setBackgroundColor(Color.BLACK)
         val params = LayoutParams(
@@ -45,31 +72,30 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
         )
         this.addView(mContainer, params)
         mContainer?.addView(baseView)
+        initTextureView()
     }
 
     private fun initTextureView() {
-        if (mTextureView == null) {
-            mTextureView = CustomTextureView(mContext)
-            mTextureView?.surfaceTextureListener = this
+        if (mSurfaceView == null) {
+            mSurfaceView = CustomSurfaceView(mContext)
         }
     }
 
     private fun addTextureView() {
-        mContainer?.removeView(mTextureView)
+        mContainer?.removeView(mSurfaceView)
         val params = LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT,
             Gravity.CENTER
         )
-        mContainer?.addView(mTextureView, 0, params)
+        mContainer?.addView(mSurfaceView, 0, params)
     }
-
 
     fun start() {
-        initTextureView()
+        mCurrentState = PlayStatus.STATE_PREPARING
         addTextureView()
+        play()
     }
-
 
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
         return false
@@ -77,32 +103,55 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
 
     override fun onClick(v: View) {
         when (v.id) {
-        }
-    }
-
-    override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
-
-    }
-
-    override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
-
-    }
-
-    override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
-        return mSurfaceTexture == null
-    }
-
-    override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
-        if (mSurfaceTexture == null) {
-            mSurfaceTexture = surface
-        } else {
-            mSurfaceTexture?.let {
-                mTextureView?.setSurfaceTexture(it)
+            R.id.restart_or_pause -> {
+                //暂停或者播放
             }
+
+
         }
     }
 
+    private fun play() {
+        mSurfaceView?.let {
+            player.setSurfaceView(it)
+            mSurface = it.holder?.surface
+        }
+        player.setDataSource(path)
+        player.prepare()
+        player.setPlayListener(object : PlayListener {
+            override fun onError(errorCode: Int) {
+                //解析出错了
+                mCurrentState = PlayStatus.STATE_ERROR
+            }
 
+            override fun onPrepared() {
+                mCurrentState = PlayStatus.STATE_PREPARED
+                setTotalTime(getTotalDuration())
+                setCurrentTimeTime(0)
+                player.start()
 
+                player.setProgressListener(this@VideoPlayer)
+            }
+        })
+    }
 
+    override fun progress(progress: Int) {
+        setCurrentTimeTime(progress)
+
+    }
+
+    //#########  提供外部使用方法  ################
+    fun setPath(path: String) {
+        this.path = path
+    }
+
+    /**
+     * TODO 获取视频的总时长
+     *
+     * @return
+     */
+    fun getTotalDuration(): Int {
+        duration = player.getDuration()
+        return duration
+    }
 }

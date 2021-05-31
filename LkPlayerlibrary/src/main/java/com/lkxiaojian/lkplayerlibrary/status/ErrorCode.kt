@@ -1,4 +1,4 @@
-package com.lkxiaojian.lkplayerlibrary
+package com.lkxiaojian.lkplayerlibrary.status
 
 /**
  * @Description:     视频播放错误码

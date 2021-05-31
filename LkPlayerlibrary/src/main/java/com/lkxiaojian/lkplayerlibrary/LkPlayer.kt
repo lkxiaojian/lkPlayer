@@ -1,5 +1,6 @@
 package com.lkxiaojian.lkplayerlibrary
 
+import android.graphics.SurfaceTexture
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
@@ -16,6 +17,10 @@ class LkPlayer : SurfaceHolder.Callback {
         init {
             System.loadLibrary("lkplayer")
         }
+
+        fun getInstance(): LkPlayer {
+            return LkPlayer()
+        }
     }
 
     private var playListener: PlayListener? = null
@@ -23,16 +28,20 @@ class LkPlayer : SurfaceHolder.Callback {
     private var surfaceHolder: SurfaceHolder? = null
     private lateinit var surfaceView: SurfaceView
     private var dataSource = ""
+
+    /**
+     * TODO 支持 surfaceView
+     *
+     * @param surfaceView
+     */
     fun setSurfaceView(surfaceView: SurfaceView) {
         this.surfaceView = surfaceView
         this.surfaceHolder?.removeCallback(this)
         this.surfaceHolder = surfaceView.holder
         this.surfaceHolder?.addCallback(this)
     }
-
     fun start() {
         nativeStart()
-//        native_start()
     }
 
     fun setDataSource(path: String) {
@@ -40,7 +49,6 @@ class LkPlayer : SurfaceHolder.Callback {
     }
 
     fun prepare() {
-//        native_prepare(dataSource)
         nativePrepare(dataSource)
     }
 
@@ -59,7 +67,6 @@ class LkPlayer : SurfaceHolder.Callback {
     fun release() {
         this.surfaceHolder?.removeCallback(this)
         nativeRelease()
-
     }
 
 
@@ -84,6 +91,7 @@ class LkPlayer : SurfaceHolder.Callback {
     fun setProgressListener(listener: ProgressListener) {
         this.progressListener = listener
     }
+
 
     /**
      * TODO 获取视频的时长
@@ -123,6 +131,6 @@ class LkPlayer : SurfaceHolder.Callback {
     external fun nativeStart(): String
     external fun nativeRelease()
     external fun nativeStop()
-    external fun getNativeDuration():Int
+    external fun getNativeDuration(): Int
     external fun setNativeSeekTo(progress: Int)
 }

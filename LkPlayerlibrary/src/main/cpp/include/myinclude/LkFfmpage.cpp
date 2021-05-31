@@ -141,7 +141,7 @@ void LkFfmpage::_prepare() {
 void *task_start(void *args) {
     auto *ffmpage = static_cast<LkFfmpage *>(args);
     ffmpage->_start();
-    return 0;
+    return nullptr;
 }
 
 /**
@@ -152,7 +152,7 @@ void *task_start(void *args) {
 void *task_stop(void *args) {
     auto *ffmpage = static_cast<LkFfmpage *>(args);
     ffmpage->_stop(ffmpage);
-    return 0;
+    return nullptr;
 }
 
 /**
@@ -208,6 +208,7 @@ void LkFfmpage::_start() {
                 javaCallHelper->onError(THREAD_CHILD, FFMPEG_READ_PACKETS_FAIL);
             }
             LOGE("读取音视频失败");
+            av_packet_free(&avPacket);
             break;
         }
     }

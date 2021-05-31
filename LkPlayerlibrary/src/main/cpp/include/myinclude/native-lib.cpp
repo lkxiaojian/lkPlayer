@@ -147,6 +147,11 @@ setSurfaceNative(JNIEnv *env, jobject thiz, jobject surface) {
     return nullptr;
 
 }
+
+
+
+
+
 /**
  * 动态注册方法
  */
