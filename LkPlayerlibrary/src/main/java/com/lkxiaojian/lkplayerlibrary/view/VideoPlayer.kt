@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.*
 import android.widget.FrameLayout
 import android.widget.SeekBar
+import androidx.lifecycle.MutableLiveData
 import com.lkxiaojian.lkplayerlibrary.LkPlayer
 import com.lkxiaojian.lkplayerlibrary.R
 import com.lkxiaojian.lkplayerlibrary.`interface`.PlayListener
@@ -26,13 +27,12 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
     private var mSurface: Surface? = null
     private var mSurfaceView: SurfaceView? = null
     private lateinit var player: LkPlayer
-    private var mCurrentState: Int = PlayStatus.STATE_IDLE
+    private var mCurrentState = MutableLiveData<Int>()
     private var path = ""
 
     init {
         init()
         setViewListen()
-
     }
 
     private fun setViewListen() {
@@ -47,22 +47,38 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
 
             override fun onStopTrackingTouch(seekBar: SeekBar) {
 
-                if(duration==0){
-                    duration= getTotalDuration()
+                if (duration == 0) {
+                    duration = getTotalDuration()
                 }
-//                val progress = seekBar.progress
-//                val i1 = progress * duration
-//                Log.e(TAG,"i--ww>${progress} duration-->$duration  i1---$i1")
-                val i = seekBar.progress*duration/100
-                Log.e(TAG,"i-->$i")
+
+                val i = seekBar.progress * duration / 100
                 isTouch = false
-                isSeek=true
+                isSeek = true
+                mCurrentState.value=PlayStatus.STATE_PLAYING
                 player.seekTo(i)
             }
         })
+        mCurrentState.observeForever {
+            when (it) {
+                PlayStatus.STATE_PLAYING -> {
+                    //播放
+                    resumeOrPause?.setImageResource(R.drawable.ic_player_pause)
+                    player.setPauseOrResume(PlayStatus.STATE_PLAYING == mCurrentState.value)
+                }
+                PlayStatus.STATE_PAUSED -> {
+                    //暂停
+                    player.setPauseOrResume(PlayStatus.STATE_PLAYING == mCurrentState.value)
+                    resumeOrPause?.setImageResource(R.drawable.ic_player_start)
+                }
+            }
+
+        }
+
     }
 
     private fun init() {
+
+        mCurrentState.value = PlayStatus.STATE_IDLE
         player = LkPlayer.getInstance()
         mContainer = FrameLayout(mContext)
         mContainer?.setBackgroundColor(Color.BLACK)
@@ -92,7 +108,7 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
     }
 
     fun start() {
-        mCurrentState = PlayStatus.STATE_PREPARING
+        mCurrentState.value = PlayStatus.STATE_PREPARING
         addTextureView()
         play()
     }
@@ -105,9 +121,13 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
         when (v.id) {
             R.id.restart_or_pause -> {
                 //暂停或者播放
+                val flag = PlayStatus.STATE_PLAYING == mCurrentState.value
+                mCurrentState.value = if (flag) {
+                    PlayStatus.STATE_PAUSED
+                } else {
+                    PlayStatus.STATE_PLAYING
+                }
             }
-
-
         }
     }
 
@@ -120,16 +140,18 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
         player.prepare()
         player.setPlayListener(object : PlayListener {
             override fun onError(errorCode: Int) {
-                //解析出错了
-                mCurrentState = PlayStatus.STATE_ERROR
+                //视频播放出错了
+                mCurrentState.value = PlayStatus.STATE_ERROR
+                Log.e(TAG, "errorCode-->$errorCode")
             }
 
             override fun onPrepared() {
-                mCurrentState = PlayStatus.STATE_PREPARED
+                lauViewModel.launchUI {
+                    mCurrentState.value = PlayStatus.STATE_PREPARED
+                }
                 setTotalTime(getTotalDuration())
                 setCurrentTimeTime(0)
                 player.start()
-
                 player.setProgressListener(this@VideoPlayer)
             }
         })
@@ -141,6 +163,11 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
     }
 
     //#########  提供外部使用方法  ################
+    /**
+     * TODO 地址 url
+     *
+     * @param path
+     */
     fun setPath(path: String) {
         this.path = path
     }

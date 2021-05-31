@@ -40,9 +40,10 @@ void dropAVFrame(queue<AVFrame *> &q) {
 }
 
 
-VideoChannel::VideoChannel(int id, AVCodecContext *avCodecContext, int fps, AVRational time_base,JavaCallHelper *javaCallHelper)
+VideoChannel::VideoChannel(int id, AVCodecContext *avCodecContext, int fps, AVRational time_base,
+                           JavaCallHelper *javaCallHelper)
         : BaseChannel(id,
-                      avCodecContext, time_base,javaCallHelper) {
+                      avCodecContext, time_base, javaCallHelper) {
 
     this->fps = fps;
     packets.setSyncOpt(dropAVPacket);
@@ -55,8 +56,8 @@ VideoChannel::~VideoChannel() {
 }
 
 void VideoChannel::stop() {
-    isPlaying= false;
-    javaCallHelper= nullptr;
+    isPlaying = false;
+    javaCallHelper = nullptr;
     packets.setWork(0);
     frames.setWork(0);
     pthread_join(pid_video_decode, nullptr);
@@ -132,6 +133,7 @@ void VideoChannel::start_decode() {
 }
 
 void VideoChannel::start_play() {
+    pthread_mutex_lock(&mutex);
     AVFrame *avFrame = nullptr;
     //对原始数据进行转换yuv->rgba
     SwsContext *swsContext = sws_getContext(avCodecContext->width, avCodecContext->height,
@@ -149,6 +151,9 @@ void VideoChannel::start_play() {
     double delay_time_per_frame = 1.0 / fps;
 
     while (isPlaying) {
+        if (isPause) {
+            pthread_cond_wait(&cond, &mutex);
+        }
         int ret = frames.pop(avFrame);
         if (!isPlaying) {
             //如果停止播放，跳出循环 释放packet
@@ -172,8 +177,8 @@ void VideoChannel::start_play() {
         if (!audioChannel) {
             //没有音频
             av_usleep((delay_time_per_frame + extra_delay) * 1000000);
-            if(javaCallHelper){
-                javaCallHelper->onProgress(THREAD_CHILD,video_time);
+            if (javaCallHelper) {
+                javaCallHelper->onProgress(THREAD_CHILD, video_time);
             }
         } else {
             double audioTime = audioChannel->audio_time;
@@ -205,6 +210,7 @@ void VideoChannel::start_play() {
         renderCallBack(dst_data[0], det_linesize[0], avCodecContext->width, avCodecContext->height);
         releaseAVFrame(&avFrame);
     }
+    pthread_mutex_unlock(&mutex);
     releaseAVFrame(&avFrame);
     isPlaying = false;
     av_free(&dst_data[0]);
@@ -219,6 +225,13 @@ void VideoChannel::setRenderCallBack(RenderCallBack back) {
 
 void VideoChannel::setAudioChannel(AudioChannel *audioChannel) {
     this->audioChannel = audioChannel;
+}
+
+void VideoChannel::setPauseOrResume(bool flag) {
+    this->isPause = flag;
+    if (!isPause) {
+        pthread_cond_signal(&cond);
+    }
 }
 
 

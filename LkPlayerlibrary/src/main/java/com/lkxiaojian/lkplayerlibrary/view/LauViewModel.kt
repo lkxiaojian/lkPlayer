@@ -2,6 +2,8 @@ package com.lkxiaojian.lkplayerlibrary.view
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
@@ -14,6 +16,8 @@ import kotlinx.coroutines.launch
  *description： LauViewModel
  */
 class LauViewModel : ViewModel() {
+
+
     fun launchUI(block: suspend CoroutineScope.() -> Unit) =
         viewModelScope.launch {
             try {

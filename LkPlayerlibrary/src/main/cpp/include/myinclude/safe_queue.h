@@ -19,7 +19,7 @@ class SafeQueue {
 public:
     SafeQueue() {
         pthread_mutex_init(&mutex, 0);
-        pthread_cond_destroy(&cond);
+        pthread_cond_init(&cond,0);
     };
 
     ~SafeQueue() {

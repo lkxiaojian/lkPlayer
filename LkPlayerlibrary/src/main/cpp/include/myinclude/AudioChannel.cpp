@@ -6,14 +6,15 @@
 #include "Macro.h"
 
 
-AudioChannel::AudioChannel(int id, AVCodecContext *avCodecContext, AVRational time_base,JavaCallHelper *javaCallHelper)
+AudioChannel::AudioChannel(int id, AVCodecContext *avCodecContext, AVRational time_base,
+                           JavaCallHelper *javaCallHelper)
         : BaseChannel(id,
-                      avCodecContext, time_base,javaCallHelper) {
+                      avCodecContext, time_base, javaCallHelper) {
     out_channels = av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);
     out_sampleSize = av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
     out_sampleRate = 44100;
     //通道数* 采样率*2（16bit=2字节）
-     out_buffers_size = out_channels * out_sampleRate * out_sampleSize;
+    out_buffers_size = out_channels * out_sampleRate * out_sampleSize;
     out_buffers = static_cast<uint8_t *>(malloc(out_buffers_size));
     memset(out_buffers, 0, out_buffers_size);
 
@@ -34,7 +35,7 @@ AudioChannel::~AudioChannel() {
         swrContext = nullptr;
     }
     DELETE(out_buffers)
-    if(avCodecContext){
+    if (avCodecContext) {
         avcodec_free_context(&avCodecContext);
         avCodecContext = nullptr;
     }
@@ -259,12 +260,16 @@ void AudioChannel::start_audio_play() {
 }
 
 int AudioChannel::getPCM() {
+    pthread_mutex_lock(&mutex);
 
     int pcm_data_size = 0;
     AVFrame *frame = nullptr;
 
 
     while (isPlaying) {
+        if (isPause) {
+            pthread_cond_wait(&cond, &mutex);
+        }
         int ret = frames.pop(frame);
         if (!isPlaying) {
             //如果停止播放了，跳出循环 释放packet
@@ -303,15 +308,26 @@ int AudioChannel::getPCM() {
         pcm_data_size = out_samples * out_sampleSize * out_channels;
         //获取音频时间
         audio_time = frame->best_effort_timestamp * av_q2d(time_base);
-        if(javaCallHelper){
-            javaCallHelper->onProgress(THREAD_CHILD,audio_time);
+        if (javaCallHelper) {
+            javaCallHelper->onProgress(THREAD_CHILD, audio_time);
         }
         break;
 
     }//end while
+    pthread_mutex_unlock(&mutex);
     releaseAVFrame(&frame);
     return pcm_data_size;
 
 }
+
+void AudioChannel::setPauseOrResume(bool flag) {
+    this->isPause = flag;
+    if (!isPause) {
+        pthread_cond_signal(&cond);
+    }
+
+}
+
+
 
 

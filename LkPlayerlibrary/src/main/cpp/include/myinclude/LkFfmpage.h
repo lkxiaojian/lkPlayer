@@ -35,10 +35,14 @@ public:
     void setRenderCallBack(RenderCallBack renderCallBack);
 
     void stop();
+
     void _stop(LkFfmpage *lkFfmpage);
+
     int getDuration() const;
 
     jint setSeekToProgress(jint i);
+
+    void setPauseOrResume(bool flag);
 
 private:
     JavaCallHelper *javaCallHelper = 0;
@@ -48,11 +52,11 @@ private:
     pthread_t pid_prepare;
     pthread_t pid_start;
     pthread_t pid_sop;
-    pthread_mutex_t  seekMutex;
+    pthread_mutex_t seekMutex;
     bool isPlaying;
-    AVFormatContext *avFormatContext= nullptr;
+    AVFormatContext *avFormatContext = nullptr;
     RenderCallBack renderCallBack;
-    int duration=0;
+    int duration = 0;
 
 
 };

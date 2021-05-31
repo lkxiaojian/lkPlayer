@@ -288,3 +288,14 @@ jint LkFfmpage::setSeekToProgress(int progress) {
     return 0;
 }
 
+void LkFfmpage::setPauseOrResume(bool flag) {
+    if (videoChannel) {
+        videoChannel->setPauseOrResume(flag);
+    }
+    if (audioChannel) {
+        audioChannel->setPauseOrResume(flag);
+    }
+
+
+}
+

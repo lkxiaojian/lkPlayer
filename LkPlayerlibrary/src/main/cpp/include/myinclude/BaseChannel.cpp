@@ -7,6 +7,8 @@
 BaseChannel::~BaseChannel() {
     packets.clear();
     frames.clear();
+    pthread_mutex_destroy(&mutex);
+    pthread_cond_destroy(&cond);
     if(avCodecContext){
         avcodec_close(avCodecContext);
         avcodec_free_context(&avCodecContext);
@@ -34,6 +36,8 @@ BaseChannel::BaseChannel(int id, AVCodecContext *codecContext,AVRational time_ba
     this->avCodecContext=codecContext;
     this->time_base=time_base;
     this->javaCallHelper=javaCallHelper;
+    pthread_mutex_init(&mutex, nullptr);
+    pthread_cond_init(&cond,nullptr);
     packets.setReleaseCallBack(releaseAVPacket);
     frames.setReleaseCallBack(releaseAVFrame);
 }

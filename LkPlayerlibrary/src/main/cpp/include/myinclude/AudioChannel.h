@@ -27,6 +27,8 @@ public:
 
     int getPCM();
 
+    void setPauseOrResume(bool flag);
+
     uint8_t *out_buffers = 0;
     int out_channels;
     int out_sampleSize;

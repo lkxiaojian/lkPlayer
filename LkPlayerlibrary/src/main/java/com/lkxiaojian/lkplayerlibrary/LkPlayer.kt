@@ -1,11 +1,11 @@
 package com.lkxiaojian.lkplayerlibrary
 
-import android.graphics.SurfaceTexture
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.lkxiaojian.lkplayerlibrary.`interface`.PlayListener
 import com.lkxiaojian.lkplayerlibrary.`interface`.ProgressListener
+
 
 /**
  *create_time : 2021/5/13 下午5:40
@@ -111,6 +111,15 @@ class LkPlayer : SurfaceHolder.Callback {
         setNativeSeekTo(progress)
     }
 
+    /**
+     * TODO 设置播放或者暂停
+     *
+     * @param flag true 暂停 false 继续播放
+     */
+    fun setPauseOrResume(flag: Boolean){
+        nativePauseOrResume(flag)
+    }
+
 
     //################ native 调用 ###############
     fun onPlayError(errorCode: Int) {
@@ -133,4 +142,5 @@ class LkPlayer : SurfaceHolder.Callback {
     external fun nativeStop()
     external fun getNativeDuration(): Int
     external fun setNativeSeekTo(progress: Int)
+    external fun nativePauseOrResume(flag:Boolean)
 }

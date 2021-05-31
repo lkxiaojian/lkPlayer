@@ -43,4 +43,8 @@ class VideoPlayActivity : AppCompatActivity() {
         binding.vPlayer.start()
 
     }
+
+    override fun onPause() {
+        super.onPause()
+    }
 }

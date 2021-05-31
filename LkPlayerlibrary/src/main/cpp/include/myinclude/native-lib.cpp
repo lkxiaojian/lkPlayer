@@ -28,6 +28,10 @@ static const char *mClassName = "com/lkxiaojian/lkplayerlibrary/LkPlayer";
  */
 void renderFrame(uint8_t *src_data, int src_lineSize, int width, int height) {
     pthread_mutex_lock(&mutex);
+    if (window == nullptr) {
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
     if (!window) {
         ANativeWindow_release(window);
         return;
@@ -145,24 +149,28 @@ setSurfaceNative(JNIEnv *env, jobject thiz, jobject surface) {
     window = ANativeWindow_fromSurface(env, surface);
     pthread_mutex_unlock(&mutex);
     return nullptr;
-
 }
 
 
-
+void setPauseOrResume(JNIEnv *env, jobject thiz, jboolean flag) {
+    if (lkFfmpage) {
+        lkFfmpage->setPauseOrResume(flag);
+    }
+}
 
 
 /**
  * 动态注册方法
  */
 static const JNINativeMethod mMethods[] = {
-        {"nativePrepare",     "(Ljava/lang/String;)Ljava/lang/String;",     (jstring *) nativePrepare},
-        {"setSurfaceNative",  "(Landroid/view/Surface;)Ljava/lang/String;", (jstring *) setSurfaceNative},
-        {"nativeStart",       "()Ljava/lang/String;",                       (jstring *) nativeStart},
-        {"nativeRelease",     "()V",                                        (void *) nativeRelease},
-        {"nativeStop",        "()V",                                        (void *) nativeStop},
-        {"getNativeDuration", "()I",                                        (jint *) getDuration},
-        {"setNativeSeekTo",   "(I)V",                                       (void *) setSeekTo}
+        {"nativePrepare",       "(Ljava/lang/String;)Ljava/lang/String;",     (jstring *) nativePrepare},
+        {"setSurfaceNative",    "(Landroid/view/Surface;)Ljava/lang/String;", (jstring *) setSurfaceNative},
+        {"nativeStart",         "()Ljava/lang/String;",                       (jstring *) nativeStart},
+        {"nativeRelease",       "()V",                                        (void *) nativeRelease},
+        {"nativeStop",          "()V",                                        (void *) nativeStop},
+        {"getNativeDuration",   "()I",                                        (jint *) getDuration},
+        {"setNativeSeekTo",     "(I)V",                                       (void *) setSeekTo},
+        {"nativePauseOrResume", "(Z)V",                                       (void *) setPauseOrResume}
 };
 
 
@@ -175,7 +183,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     }
 
     jclass nativeClass = env->FindClass(mClassName);
-    ret = env->RegisterNatives(nativeClass, mMethods, 7);
+    ret = env->RegisterNatives(nativeClass, mMethods, 8);
     if (ret != JNI_OK) {
         return -1;
     }

@@ -20,7 +20,7 @@ import com.lkxiaojian.lkplayerlibrary.utlis.PlayerUtils
 abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
     FrameLayout(context, attrs), View.OnTouchListener, View.OnClickListener {
     var baseView: View? = null
-    private var restartOrPause: AppCompatImageView? = null
+    var resumeOrPause: AppCompatImageView? = null
     private var aivFullScreen: AppCompatImageView? = null
     private var atvPosition: AppCompatTextView? = null
     private var atvDuration: AppCompatTextView? = null
@@ -29,7 +29,7 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
     var seekBar: SeekBar? = null
     var lauViewModel: LauViewModel
     var duration = 0
-    val TAG="player"
+    val TAG = "player"
 
 
     init {
@@ -43,7 +43,7 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
      *  获取控件
      */
     fun findViewById() {
-        restartOrPause = baseView?.findViewById(R.id.restart_or_pause)
+        resumeOrPause = baseView?.findViewById(R.id.restart_or_pause)
         atvPosition = baseView?.findViewById(R.id.atv_position)
         seekBar = baseView?.findViewById(R.id.seek)
         atvDuration = baseView?.findViewById(R.id.atv_duration)
@@ -54,7 +54,7 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
      * 设置监听
      */
     private fun setViewListener() {
-        restartOrPause?.setOnClickListener(this)
+        resumeOrPause?.setOnClickListener(this)
         aivFullScreen?.setOnClickListener(this)
     }
 
@@ -78,6 +78,11 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
             val timeByS1 = PlayerUtils.getTimeByS(totalTime)
             atvDuration?.text = timeByS1
         }
+    }
+
+    fun setPauseOrResume() {
+
+
     }
 
 

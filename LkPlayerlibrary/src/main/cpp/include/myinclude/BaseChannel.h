@@ -8,7 +8,8 @@
 
 #include "safe_queue.h"
 #include "JavaCallHelper.h"
-extern "C"{
+
+extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavcodec/avcodec.h>
 #include <libavutil/time.h>
@@ -18,7 +19,8 @@ extern "C"{
 
 class BaseChannel {
 public:
-     BaseChannel(int id, AVCodecContext *codecContext,AVRational time_base,JavaCallHelper *javaCallHelper);
+    BaseChannel(int id, AVCodecContext *codecContext, AVRational time_base,
+                JavaCallHelper *javaCallHelper);
 
     virtual ~BaseChannel();
 
@@ -29,13 +31,19 @@ public:
     SafeQueue<AVFrame *> frames;
     SafeQueue<AVPacket *> packets;
     int id;
-    virtual void start()=0;
-    virtual void stop()=0;
-    bool isPlaying= false;
-    AVCodecContext *avCodecContext= nullptr;
+
+    virtual void start() = 0;
+
+    virtual void stop() = 0;
+
+    bool isPlaying = false;
+    AVCodecContext *avCodecContext = nullptr;
     AVRational time_base;
     double audio_time;
-    JavaCallHelper *javaCallHelper=0;
+    JavaCallHelper *javaCallHelper = 0;
+    bool isPause= false;// true 暂停 false 播放
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
 
 };
 

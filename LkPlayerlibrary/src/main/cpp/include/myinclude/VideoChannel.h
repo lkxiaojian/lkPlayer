@@ -27,7 +27,7 @@ public:
 
     void setRenderCallBack(RenderCallBack renderCallBack);
     void setAudioChannel( AudioChannel *audioChannel);
-
+    void setPauseOrResume(bool flag);
 private:
     pthread_t  pid_video_decode;
     pthread_t  pid_video_play;
