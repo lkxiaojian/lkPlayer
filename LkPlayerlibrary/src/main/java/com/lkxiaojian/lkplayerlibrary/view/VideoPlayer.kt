@@ -171,8 +171,7 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
             PlayerUtils.scanForActivity(mContext)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             val contentView = PlayerUtils.scanForActivity(mContext)
                 ?.findViewById(android.R.id.content) as ViewGroup
-
-
+            mContainer
             contentView.removeView(mContainer)
             val params = LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
