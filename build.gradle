@@ -4,7 +4,6 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://repo1.maven.org/maven2/' }
     }
     dependencies {
         classpath "com.android.tools.build:gradle:4.1.0"
@@ -19,11 +18,8 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://dl.bintray.com/umsdk/release' }
         maven { url 'http://maven.aliyun.com/nexus/content/groups/public'}
         maven { url 'https://jitpack.io' }
-        maven {url 'https://esri.jfrog.io/artifactory/arcgis'}
-        maven { url 'https://repo1.maven.org/maven2/' }
     }
 }
 

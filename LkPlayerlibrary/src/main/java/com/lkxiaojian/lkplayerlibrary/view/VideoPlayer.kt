@@ -37,6 +37,8 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
     private var mCurrentState = MutableLiveData<Int>()
     private var path = ""
     private var mCurrentMode: Int = MODE_NORMAL
+    private var showBaseControl = false
+    private var builder = Builder()
 
     init {
         init()
@@ -69,11 +71,11 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
                 PlayStatus.STATE_PLAYING -> {
                     //播放
                     resumeOrPause?.setImageResource(R.drawable.ic_player_pause)
-                    player.setPauseOrResume(PlayStatus.STATE_PLAYING == mCurrentState.value)
+                    builder.setPauseOrResume(PlayStatus.STATE_PLAYING == mCurrentState.value)
                 }
                 PlayStatus.STATE_PAUSED -> {
                     //暂停
-                    player.setPauseOrResume(PlayStatus.STATE_PLAYING == mCurrentState.value)
+                    builder.setPauseOrResume(PlayStatus.STATE_PLAYING == mCurrentState.value)
                     resumeOrPause?.setImageResource(R.drawable.ic_player_start)
                 }
             }
@@ -123,9 +125,19 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
         play()
     }
 
-    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+    override fun onTouch(v: View?, event: MotionEvent): Boolean {
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                showBaseControl = true
+            }
+            MotionEvent.ACTION_POINTER_UP -> {
+                showBaseControl = false
+            }
+        }
+
         return false
     }
+
 
     override fun onClick(v: View) {
         when (v.id) {
@@ -163,13 +175,18 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
             }
 
             override fun onPrepared() {
-                lauViewModel.launchUI {
-                    mCurrentState.value = PlayStatus.STATE_PREPARED
-                }
+
                 setTotalTime(getTotalDuration())
                 setCurrentTimeTime(0)
                 player.start()
                 player.setProgressListener(this@VideoPlayer)
+                lauViewModel.launchUI {
+                    mCurrentState.value = PlayStatus.STATE_PREPARED
+                    // 设置屏幕常亮
+                    mContainer?.keepScreenOn = true
+                    delay(1500)
+
+                }
             }
         })
     }
@@ -193,7 +210,6 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
             } else {
                 removeView(mContainer)
             }
-            delay(300)
             val params = LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -202,8 +218,6 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
 
             mCurrentMode = MODE_FULL_SCREEN
         }
-
-//        mController.onPlayModeChanged(mCurrentMode)
     }
 
     //#########  提供外部使用方法  ################
@@ -232,9 +246,28 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
         } else {
             MODE_NORMAL
         }
+
     }
 
     fun stop() {
-        player.stop()
+        builder.stop()
+    }
+
+    inner class Builder : IVideoPlayer {
+        override fun start() {
+            player.start()
+        }
+
+        override fun setPath(url: String) {
+            player.setDataSource(url)
+        }
+
+        override fun stop() {
+            player.stop()
+        }
+
+        override fun setPauseOrResume(flag: Boolean) {
+            player.setPauseOrResume(flag)
+        }
     }
 }
