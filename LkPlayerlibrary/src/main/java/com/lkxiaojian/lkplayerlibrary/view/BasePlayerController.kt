@@ -1,5 +1,6 @@
 package com.lkxiaojian.lkplayerlibrary.view
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -17,12 +18,13 @@ import com.lkxiaojian.lkplayerlibrary.utlis.PlayerUtils
  * @Author:         lk
  * @CreateDate:     2021/5/27 14:30
  */
+@SuppressLint("InflateParams")
 abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
     FrameLayout(context, attrs), View.OnTouchListener, View.OnClickListener {
     var baseView: View? = null
     var resumeOrPause: AppCompatImageView? = null
     var clBaseControl:ConstraintLayout?=null
-    private var aivFullScreen: AppCompatImageView? = null
+     var aivFullScreen: AppCompatImageView? = null
     private var atvPosition: AppCompatTextView? = null
     private var atvDuration: AppCompatTextView? = null
     var isTouch = false//是否在触摸进度条
@@ -81,4 +83,6 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
             atvDuration?.text = timeByS1
         }
     }
+
+
 }

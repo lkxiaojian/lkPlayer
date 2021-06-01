@@ -181,7 +181,6 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     if (ret != JNI_OK) {
         return -1;
     }
-
     jclass nativeClass = env->FindClass(mClassName);
     ret = env->RegisterNatives(nativeClass, mMethods, 8);
     if (ret != JNI_OK) {

@@ -57,7 +57,7 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
 
             override fun onStopTrackingTouch(seekBar: SeekBar) {
                 if (duration == 0) {
-                    duration = getTotalDuration()
+                    duration = builder.getDuration()
                 }
                 val i = seekBar.progress * duration / 100
                 isTouch = false
@@ -85,7 +85,6 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
     }
 
     private fun init() {
-
         mCurrentState.value = PlayStatus.STATE_IDLE
         player = LkPlayer.getInstance()
         mContainer = FrameLayout(mContext)
@@ -116,10 +115,10 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
         mContainer?.addView(mSurfaceView, 0, params)
     }
 
-    fun start() {
+  private  fun start() {
         mCurrentState.value = PlayStatus.STATE_PREPARING
         addTextureView()
-        if (MODE_NORMAL == MODE_FULL_SCREEN) {
+        if (mCurrentMode == MODE_FULL_SCREEN) {
             enterFullScreen()
         }
         play()
@@ -134,7 +133,6 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
                 showBaseControl = false
             }
         }
-
         return false
     }
 
@@ -150,11 +148,40 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
                     PlayStatus.STATE_PLAYING
                 }
             }
-
             R.id.aiv_full_screen -> {
-                enterFullScreen()
+
+                if (mCurrentMode != MODE_FULL_SCREEN) {
+                    enterFullScreen()
+                } else {
+                    exitFullScreen()
+                }
+
             }
         }
+    }
+
+    /**
+     * TODO 退出全屏
+     *
+     */
+    private fun exitFullScreen() {
+        if (mCurrentMode == MODE_FULL_SCREEN) {
+            aivFullScreen?.setImageResource(R.drawable.ic_player_enlarge)
+            PlayerUtils.showActionBar(mContext)
+            PlayerUtils.scanForActivity(mContext)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            val contentView = PlayerUtils.scanForActivity(mContext)
+                ?.findViewById(android.R.id.content) as ViewGroup
+
+
+            contentView.removeView(mContainer)
+            val params = LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            addView(mContainer, params)
+            mCurrentMode = MODE_NORMAL
+        }
+
     }
 
     private fun play() {
@@ -171,12 +198,10 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
                     mCurrentState.value = PlayStatus.STATE_ERROR
                     Log.e(TAG, "errorCode-->$errorCode")
                 }
-
             }
 
             override fun onPrepared() {
-
-                setTotalTime(getTotalDuration())
+                setTotalTime(builder.getDuration())
                 setCurrentTimeTime(0)
                 player.start()
                 player.setProgressListener(this@VideoPlayer)
@@ -193,12 +218,11 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
 
     override fun progress(progress: Int) {
         setCurrentTimeTime(progress)
-
     }
 
     private fun enterFullScreen() {
         lauViewModel.launchUI {
-            if (mCurrentMode == MODE_FULL_SCREEN) return@launchUI
+            aivFullScreen?.setImageResource(R.drawable.ic_player_shrink)
             // 隐藏ActionBar、状态栏，并横屏
             PlayerUtils.hideActionBar(mContext)
             PlayerUtils.scanForActivity(mContext)?.requestedOrientation =
@@ -215,59 +239,47 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
             contentView?.addView(mContainer, params)
-
             mCurrentMode = MODE_FULL_SCREEN
         }
     }
 
-    //#########  提供外部使用方法  ################
-    /**
-     * TODO 地址 url
-     *
-     * @param path
-     */
-    fun setPath(path: String) {
-        this.path = path
-    }
-
-    /**
-     * TODO 获取视频的总时长
-     *
-     * @return
-     */
-    fun getTotalDuration(): Int {
-        duration = player.getDuration()
-        return duration
-    }
-
-    fun setFullScreen(flag: Boolean) {
-        MODE_NORMAL = if (flag) {
-            MODE_FULL_SCREEN
-        } else {
-            MODE_NORMAL
-        }
-
-    }
-
-    fun stop() {
-        builder.stop()
-    }
-
     inner class Builder : IVideoPlayer {
-        override fun start() {
-            player.start()
+        override fun start(): Builder {
+          this@VideoPlayer.start()
+            return this
         }
 
-        override fun setPath(url: String) {
-            player.setDataSource(url)
+        override fun setPath(url: String): Builder {
+           this@VideoPlayer. path=url
+            return this
         }
 
-        override fun stop() {
+        override fun setFullScreen(flag: Boolean): Builder {
+            mCurrentMode = if (flag) {
+                MODE_FULL_SCREEN
+            } else {
+                MODE_NORMAL
+            }
+            return this
+        }
+
+        override fun getDuration(): Int {
+            duration = player.getDuration()
+            return duration
+        }
+
+        override fun stop(): Builder {
             player.stop()
+            return this
         }
 
-        override fun setPauseOrResume(flag: Boolean) {
+        override fun setPauseOrResume(flag: Boolean): Builder {
             player.setPauseOrResume(flag)
+            return this
+        }
+
+        override fun destory() {
+            player.release()
         }
     }
 }

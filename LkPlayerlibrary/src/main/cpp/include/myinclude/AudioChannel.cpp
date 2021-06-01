@@ -68,6 +68,8 @@ void AudioChannel::stop() {
     javaCallHelper = nullptr;
     packets.setWork(0);
     frames.setWork(0);
+    pthread_mutex_destroy(&mutex);
+    pthread_cond_destroy(&cond);
     pthread_join(pid_audio_decode, nullptr);
     pthread_join(pid_audio_play, nullptr);
     if (swrContext) {

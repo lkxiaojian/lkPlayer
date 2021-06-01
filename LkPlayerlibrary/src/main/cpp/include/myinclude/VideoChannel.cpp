@@ -60,6 +60,8 @@ void VideoChannel::stop() {
     javaCallHelper = nullptr;
     packets.setWork(0);
     frames.setWork(0);
+    pthread_mutex_destroy(&mutex);
+    pthread_cond_destroy(&cond);
     pthread_join(pid_video_decode, nullptr);
     pthread_join(pid_video_play, nullptr);
 }
