@@ -215,8 +215,13 @@ void LkFfmpage::_start() {
 
     isPlaying = false;
     //停止解码音频 和视频
-    videoChannel->stop();
-    audioChannel->stop();
+    if (videoChannel) {
+        videoChannel->stop();
+    }
+    if (audioChannel) {
+        audioChannel->stop();
+    }
+
 }
 
 void LkFfmpage::setRenderCallBack(RenderCallBack back) {

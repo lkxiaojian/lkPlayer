@@ -20,13 +20,15 @@ import com.lkxiaojian.lkplayerlibrary.utlis.PlayerUtils
  */
 @SuppressLint("InflateParams")
 abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
-    FrameLayout(context, attrs), View.OnTouchListener, View.OnClickListener {
-    var baseView: View? = null
-    var resumeOrPause: AppCompatImageView? = null
-    var clBaseControl:ConstraintLayout?=null
-     var aivFullScreen: AppCompatImageView? = null
+    FrameLayout(context, attrs), View.OnClickListener {
     private var atvPosition: AppCompatTextView? = null
     private var atvDuration: AppCompatTextView? = null
+    var baseView: View? = null
+    var resumeOrPause: AppCompatImageView? = null
+    var clBaseControl: ConstraintLayout? = null
+    var aivFullScreen: AppCompatImageView? = null
+    var aivBack: AppCompatImageView? = null
+    var title: AppCompatTextView? = null
     var isTouch = false//是否在触摸进度条
     var isSeek = false//是否在移动进度条
     var seekBar: SeekBar? = null
@@ -52,6 +54,8 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
         atvDuration = baseView?.findViewById(R.id.atv_duration)
         aivFullScreen = baseView?.findViewById(R.id.aiv_full_screen)
         clBaseControl = baseView?.findViewById(R.id.cl_base_control)
+        title = baseView?.findViewById(R.id.title)
+        aivBack = baseView?.findViewById(R.id.aiv_back)
     }
 
     /**
@@ -60,11 +64,12 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
     private fun setViewListener() {
         resumeOrPause?.setOnClickListener(this)
         aivFullScreen?.setOnClickListener(this)
+        aivBack?.setOnClickListener(this)
     }
 
     fun setCurrentTimeTime(currentTime: Int) {
         lauViewModel.launchUI {
-            val timeByS = PlayerUtils.getTimeByS(currentTime)
+            val timeByS = PlayerUtils.formatTime(currentTime.toLong())
             atvPosition?.text = timeByS
             if (duration != 0 && !isTouch) {
                 if (isSeek) {
@@ -79,7 +84,7 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
 
     fun setTotalTime(totalTime: Int) {
         lauViewModel.launchUI {
-            val timeByS1 = PlayerUtils.getTimeByS(totalTime)
+            val timeByS1 = PlayerUtils.formatTime(totalTime.toLong())
             atvDuration?.text = timeByS1
         }
     }

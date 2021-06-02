@@ -1,5 +1,6 @@
 package com.lkxiaojian.lkplayerlibrary.view
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.graphics.Color
@@ -28,7 +29,7 @@ import kotlinx.coroutines.delay
  * @CreateDate:     2021/5/27 15:23
  */
 class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController(context, attrs),
-    ProgressListener {
+    ProgressListener,View.OnTouchListener {
     private val mContext = context
     private var mContainer: FrameLayout? = null
     private var mSurface: Surface? = null
@@ -46,9 +47,9 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
     }
 
     private fun setViewListen() {
+        setOnTouchListener(this)
         seekBar?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar) {
@@ -84,6 +85,7 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
 
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun init() {
         mCurrentState.value = PlayStatus.STATE_IDLE
         player = LkPlayer.getInstance()
@@ -94,6 +96,7 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
             ViewGroup.LayoutParams.MATCH_PARENT
         )
         this.addView(mContainer, params)
+        mContainer?.setOnTouchListener(this)
         mContainer?.addView(baseView)
         initTextureView()
 
@@ -115,7 +118,7 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
         mContainer?.addView(mSurfaceView, 0, params)
     }
 
-  private  fun start() {
+    private fun start() {
         mCurrentState.value = PlayStatus.STATE_PREPARING
         addTextureView()
         if (mCurrentMode == MODE_FULL_SCREEN) {
@@ -128,12 +131,19 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 showBaseControl = true
+                clBaseControl?.visibility = View.VISIBLE
             }
-            MotionEvent.ACTION_POINTER_UP -> {
+            MotionEvent.ACTION_UP -> {
                 showBaseControl = false
+                builder.dismissBaseControl()
+            }
+            MotionEvent.ACTION_CANCEL->{
+                showBaseControl = false
+                builder.dismissBaseControl()
             }
         }
-        return false
+
+        return true
     }
 
 
@@ -155,6 +165,18 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
                 } else {
                     exitFullScreen()
                 }
+                builder.dismissBaseControl()
+
+            }
+            R.id.aiv_back -> {
+                //按返回键 如果是全屏，就退出全屏
+                if (mCurrentMode == MODE_FULL_SCREEN) {
+                    exitFullScreen()
+                }
+//                else{
+//                    //退出
+////                    exitTinyWindow
+//                }
 
             }
         }
@@ -168,7 +190,8 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
         if (mCurrentMode == MODE_FULL_SCREEN) {
             aivFullScreen?.setImageResource(R.drawable.ic_player_enlarge)
             PlayerUtils.showActionBar(mContext)
-            PlayerUtils.scanForActivity(mContext)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            PlayerUtils.scanForActivity(mContext)?.requestedOrientation =
+                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             val contentView = PlayerUtils.scanForActivity(mContext)
                 ?.findViewById(android.R.id.content) as ViewGroup
             mContainer
@@ -208,9 +231,9 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
                     mCurrentState.value = PlayStatus.STATE_PREPARED
                     // 设置屏幕常亮
                     mContainer?.keepScreenOn = true
-                    delay(1500)
 
                 }
+                builder.dismissBaseControl()
             }
         })
     }
@@ -243,13 +266,18 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
     }
 
     inner class Builder : IVideoPlayer {
+        override fun setTitle(m: String): Builder {
+            title?.text = m
+            return this
+        }
+
         override fun start(): Builder {
-          this@VideoPlayer.start()
+            this@VideoPlayer.start()
             return this
         }
 
         override fun setPath(url: String): Builder {
-           this@VideoPlayer. path=url
+            this@VideoPlayer.path = url
             return this
         }
 
@@ -265,6 +293,16 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
         override fun getDuration(): Int {
             duration = player.getDuration()
             return duration
+        }
+
+        override fun dismissBaseControl() {
+            if (!showBaseControl) {
+                lauViewModel.launchUI {
+                    delay(2500)
+                    clBaseControl?.visibility = View.GONE
+                }
+            }
+
         }
 
         override fun stop(): Builder {

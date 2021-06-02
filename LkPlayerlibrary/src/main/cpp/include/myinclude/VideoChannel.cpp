@@ -77,7 +77,6 @@ void *video_play(void *args) {
 void *video_decode(void *args) {
     auto *videoChannel = static_cast<VideoChannel *>(args);
     videoChannel->start_decode();
-
     return nullptr;
 }
 
@@ -212,11 +211,12 @@ void VideoChannel::start_play() {
         renderCallBack(dst_data[0], det_linesize[0], avCodecContext->width, avCodecContext->height);
         releaseAVFrame(&avFrame);
     }
-    pthread_mutex_unlock(&mutex);
+
     releaseAVFrame(&avFrame);
     isPlaying = false;
     av_free(&dst_data[0]);
     sws_freeContext(swsContext);
+    pthread_mutex_unlock(&mutex);
     return;
 
 }

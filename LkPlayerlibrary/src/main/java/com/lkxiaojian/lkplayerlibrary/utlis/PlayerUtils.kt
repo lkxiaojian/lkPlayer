@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.util.TypedValue
+import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ContextThemeWrapper
@@ -16,48 +17,6 @@ import java.util.*
  *description： PlayerUtils
  */
 object PlayerUtils {
-
-    fun getTimeByS(time: Int): String {
-        return when {
-            time < 60 -> {
-                when {
-                    time == 0 -> {
-                        "00:00"
-                    }
-                    time < 9 -> {
-                        "00:0$time"
-                    }
-                    else -> {
-                        "00:$time"
-                    }
-                }
-            }
-            time in 61..3599 -> {
-                val m = time / 60
-                val s = time % 60
-                if (s < 9) {
-                    "$m:0$s"
-                } else {
-                    "$m:$s"
-                }
-            }
-            else -> {
-                val h = time / 3600
-                val m = (time % 3600) / 60
-                val s = (time % 3600) % 60
-                var sm = "$m"
-                var ss = "$s"
-                if (m < 9) {
-                    sm = "0$m"
-                }
-                if (s < 9) {
-                    ss = "0$s"
-                }
-                "$h:$sm:$ss"
-            }
-        }
-
-    }
 
 
     /**
@@ -100,9 +59,17 @@ object PlayerUtils {
             ab.setShowHideAnimationEnabled(false)
             ab.show()
         }
-        scanForActivity(context)
-            ?.window
-            ?.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        val window = scanForActivity(context)?.window
+        window?.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+
+        val flags =
+            View.SYSTEM_UI_FLAG_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                    View.SYSTEM_UI_FLAG_IMMERSIVE or
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        window?.clearFlags(flags)
+
     }
 
     @SuppressLint("RestrictedApi")
@@ -113,13 +80,23 @@ object PlayerUtils {
             ab.setShowHideAnimationEnabled(false)
             ab.hide()
         }
-        scanForActivity(context)
-            ?.window
-            ?.setFlags(
-                WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN
-            )
+        val window = scanForActivity(context)?.window
+
+        window?.setFlags(
+            WindowManager.LayoutParams.FLAG_FULLSCREEN,
+            WindowManager.LayoutParams.FLAG_FULLSCREEN
+        )
+
+        // 隐藏底部导航栏
+        val flags =
+            View.SYSTEM_UI_FLAG_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                    View.SYSTEM_UI_FLAG_IMMERSIVE or
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        window?.decorView?.systemUiVisibility = flags
     }
+
 
     /**
      * 获取屏幕宽度
@@ -162,13 +139,12 @@ object PlayerUtils {
      * @return ##:##
      */
     fun formatTime(milliseconds: Long): String? {
-        if (milliseconds <= 0 || milliseconds >= 24 * 60 * 60 * 1000) {
+        if (milliseconds <= 0 || milliseconds >= 24 * 60 * 60) {
             return "00:00"
         }
-        val totalSeconds = milliseconds / 1000
-        val seconds = totalSeconds % 60
-        val minutes = totalSeconds / 60 % 60
-        val hours = totalSeconds / 3600
+        val seconds = milliseconds % 60
+        val minutes = milliseconds / 60 % 60
+        val hours = milliseconds / 3600
         val stringBuilder = StringBuilder()
         val mFormatter =
             Formatter(stringBuilder, Locale.getDefault())
@@ -191,7 +167,7 @@ object PlayerUtils {
         position: Long
     ) {
         context.getSharedPreferences(
-            "NICE_VIDEO_PALYER_PLAY_POSITION",
+            "VIDEO_PALYER_PLAY_POSITION",
             Context.MODE_PRIVATE
         )
             .edit()
@@ -211,7 +187,7 @@ object PlayerUtils {
         url: String?
     ): Long {
         return context.getSharedPreferences(
-            "NICE_VIDEO_PALYER_PLAY_POSITION",
+            "VIDEO_PALYER_PLAY_POSITION",
             Context.MODE_PRIVATE
         )
             .getLong(url, 0)

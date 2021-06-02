@@ -6,6 +6,8 @@ package com.lkxiaojian.lkplayerlibrary.view
  *description： IVideoPlayer
  */
 interface IVideoPlayer {
+    fun setTitle(title:String): VideoPlayer.Builder
+
     /**
      * TODO 开始播放
      *
@@ -36,6 +38,9 @@ interface IVideoPlayer {
      * @return 单位 s 秒
      */
     fun getDuration():Int
+
+
+     fun dismissBaseControl()
 
     /**
      * TODO 结束播放，销毁
