@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.ProgressBar
 import android.widget.SeekBar
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.appcompat.widget.AppCompatTextView
@@ -20,20 +21,30 @@ import com.lkxiaojian.lkplayerlibrary.utlis.PlayerUtils
  */
 @SuppressLint("InflateParams")
 abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
-    FrameLayout(context, attrs), View.OnClickListener {
+    FrameLayout(context, attrs), View.OnClickListener, View.OnTouchListener {
     private var atvPosition: AppCompatTextView? = null
     private var atvDuration: AppCompatTextView? = null
     var baseView: View? = null
     var resumeOrPause: AppCompatImageView? = null
     var clBaseControl: ConstraintLayout? = null
+    var changeVolume: ConstraintLayout? = null//改变声音
+    var changeBrightness: ConstraintLayout? = null//改变亮度
+
+
     var aivFullScreen: AppCompatImageView? = null
     var aivBack: AppCompatImageView? = null
     var title: AppCompatTextView? = null
     var isTouch = false//是否在触摸进度条
     var isSeek = false//是否在移动进度条
     var seekBar: SeekBar? = null
+    var change_volume_progress: ProgressBar? = null
+    var change_brightness_progress: ProgressBar? = null
     var lauViewModel: LauViewModel
     var duration = 0
+    val THRESHOLD = 80
+    var mGestureDownBrightness:Float? = 0f
+     var mGestureDownVolume = 0
+
     val TAG = "player"
 
 
@@ -56,6 +67,12 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
         clBaseControl = baseView?.findViewById(R.id.cl_base_control)
         title = baseView?.findViewById(R.id.title)
         aivBack = baseView?.findViewById(R.id.aiv_back)
+
+        changeVolume = baseView?.findViewById(R.id.change_volume)
+        changeBrightness = baseView?.findViewById(R.id.change_brightness)
+
+        change_brightness_progress = baseView?.findViewById(R.id.change_brightness_progress)
+        change_volume_progress = baseView?.findViewById(R.id.change_volume_progress)
     }
 
     /**
@@ -65,6 +82,7 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
         resumeOrPause?.setOnClickListener(this)
         aivFullScreen?.setOnClickListener(this)
         aivBack?.setOnClickListener(this)
+        setOnTouchListener(this)
     }
 
     fun setCurrentTimeTime(currentTime: Int) {
@@ -89,5 +107,16 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
         }
     }
 
+   protected fun showChangeVolume( newVolumeProgress:Int){
+        changeVolume?.visibility = View.VISIBLE
+       changeBrightness?.visibility = View.GONE
+        change_volume_progress?.progress = newVolumeProgress
+    }
+
+    protected fun showChangeBrightness( newVolumeProgress:Int){
+        changeBrightness?.visibility = View.VISIBLE
+        changeVolume?.visibility = View.GONE
+        change_brightness_progress?.progress = newVolumeProgress
+    }
 
 }

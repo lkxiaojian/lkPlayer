@@ -39,8 +39,30 @@ interface IVideoPlayer {
      */
     fun getDuration():Int
 
+    /**
+     * 获取最大音量
+     *
+     * @return 最大音量值
+     */
+    fun getMaxVolume(): Int
 
-     fun dismissBaseControl()
+
+    /**
+     * 获取当前音量
+     *
+     * @return 当前音量值
+     */
+    fun getVolume(): Int
+
+    /**
+     * 设置音量
+     *
+     * @param volume 音量值
+     */
+    fun setVolume(volume: Int)
+
+
+    fun dismissBaseControl()
 
     /**
      * TODO 结束播放，销毁

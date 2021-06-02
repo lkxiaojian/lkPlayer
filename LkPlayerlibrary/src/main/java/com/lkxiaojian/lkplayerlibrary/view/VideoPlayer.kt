@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.graphics.Color
+import android.media.AudioManager
 import android.util.AttributeSet
 import android.util.Log
 import android.view.*
@@ -21,6 +22,7 @@ import com.lkxiaojian.lkplayerlibrary.status.PlayStatus.MODE_NORMAL
 import com.lkxiaojian.lkplayerlibrary.status.PlayStatus.MODE_TINY_WINDOW
 import com.lkxiaojian.lkplayerlibrary.utlis.PlayerUtils
 import kotlinx.coroutines.delay
+import kotlin.math.abs
 
 
 /**
@@ -29,7 +31,7 @@ import kotlinx.coroutines.delay
  * @CreateDate:     2021/5/27 15:23
  */
 class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController(context, attrs),
-    ProgressListener,View.OnTouchListener {
+    ProgressListener, View.OnTouchListener {
     private val mContext = context
     private var mContainer: FrameLayout? = null
     private var mSurface: Surface? = null
@@ -40,6 +42,9 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
     private var mCurrentMode: Int = MODE_NORMAL
     private var showBaseControl = false
     private var builder = Builder()
+    private var mDownX = 0f
+    private var mDownY = 0f
+    private var mAudioManager: AudioManager? = null
 
     init {
         init()
@@ -72,11 +77,10 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
                 PlayStatus.STATE_PLAYING -> {
                     //播放
                     resumeOrPause?.setImageResource(R.drawable.ic_player_pause)
-                    builder.setPauseOrResume(PlayStatus.STATE_PLAYING == mCurrentState.value)
                 }
                 PlayStatus.STATE_PAUSED -> {
                     //暂停
-                    builder.setPauseOrResume(PlayStatus.STATE_PLAYING == mCurrentState.value)
+//                    builder.setPauseOrResume(PlayStatus.STATE_PLAYING == mCurrentState.value)
                     resumeOrPause?.setImageResource(R.drawable.ic_player_start)
                 }
             }
@@ -99,7 +103,19 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
         mContainer?.setOnTouchListener(this)
         mContainer?.addView(baseView)
         initTextureView()
+        initAudioManager()
+    }
 
+    private fun initAudioManager() {
+        if (mAudioManager == null) {
+            mAudioManager =
+                context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            mAudioManager?.requestAudioFocus(
+                null,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+            )
+        }
     }
 
     private fun initTextureView() {
@@ -128,19 +144,78 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
     }
 
     override fun onTouch(v: View?, event: MotionEvent): Boolean {
+        val x = event.x
+        val y = event.y
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                mDownX = x
+                mDownY = y
                 showBaseControl = true
                 clBaseControl?.visibility = View.VISIBLE
             }
-            MotionEvent.ACTION_UP -> {
+            MotionEvent.ACTION_UP , MotionEvent.ACTION_CANCEL -> {
                 showBaseControl = false
                 builder.dismissBaseControl()
             }
-            MotionEvent.ACTION_CANCEL->{
-                showBaseControl = false
-                builder.dismissBaseControl()
+            MotionEvent.ACTION_MOVE -> {
+                showBaseControl = true
+                if (mCurrentState.value == PlayStatus.STATE_PLAYING ||
+                    mCurrentState.value == PlayStatus.STATE_PAUSED ||
+                    mCurrentState.value == PlayStatus.STATE_BUFFERING_PLAYING ||
+                    mCurrentState.value == PlayStatus.STATE_BUFFERING_PAUSED
+                ) {
+                    val deltaX: Float = x - mDownX
+                    var deltaY: Float = y - mDownY
+                    val absDeltaX = abs(deltaX)
+                    val absDeltaY = abs(deltaY)
+
+
+                    // 只有在播放、暂停、缓冲的时候能够拖动改变位置、亮度和声音
+                    if (absDeltaX >= THRESHOLD) {
+
+                    } else if (absDeltaY >= THRESHOLD) {
+                        if (mDownX < width * 0.5f) {
+                            // 左侧改变亮度
+                            mGestureDownBrightness =
+                                PlayerUtils.scanForActivity(mContext)?.window?.attributes?.screenBrightness
+                            deltaY = -deltaY
+                            val deltaBrightness = deltaY / 8 / height
+                            var newBrightness =
+                                mGestureDownBrightness!! + deltaBrightness
+                            newBrightness =
+                                0f.coerceAtLeast(newBrightness.coerceAtMost(1f))
+                            val newBrightnessPercentage = newBrightness
+                            val params: WindowManager.LayoutParams? =
+                                PlayerUtils.scanForActivity(mContext)
+                                    ?.window?.attributes
+                            params?.screenBrightness = newBrightnessPercentage
+                            PlayerUtils.scanForActivity(mContext)?.window?.attributes = params
+                            val newBrightnessProgress = (100f * newBrightnessPercentage).toInt()
+                            showChangeBrightness(newBrightnessProgress)
+
+
+                        } else {
+                            // 右侧改变声音
+                            mGestureDownVolume = builder.getVolume()
+
+                            deltaY = -deltaY
+                            val maxVolume: Int = builder.getMaxVolume()
+                            val deltaVolume = (maxVolume * deltaY / 8 / height).toInt()
+                            var newVolume = mGestureDownVolume + deltaVolume
+                            newVolume =
+                                0.coerceAtLeast(maxVolume.coerceAtMost(newVolume))
+                            builder.setVolume(newVolume)
+                            val newVolumeProgress = (100f * newVolume / maxVolume).toInt()
+                            showChangeVolume(newVolumeProgress)
+                        }
+                    }
+
+                }
+
+
             }
+
+
         }
 
         return true
@@ -157,6 +232,8 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
                 } else {
                     PlayStatus.STATE_PLAYING
                 }
+                builder.setPauseOrResume(flag)
+
             }
             R.id.aiv_full_screen -> {
 
@@ -228,7 +305,7 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
                 player.start()
                 player.setProgressListener(this@VideoPlayer)
                 lauViewModel.launchUI {
-                    mCurrentState.value = PlayStatus.STATE_PREPARED
+                    mCurrentState.value = PlayStatus.STATE_PLAYING
                     // 设置屏幕常亮
                     mContainer?.keepScreenOn = true
 
@@ -295,11 +372,29 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
             return duration
         }
 
+        override fun getMaxVolume(): Int {
+            return if (mAudioManager != null) {
+                mAudioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+            } else 0
+        }
+
+        override fun getVolume(): Int {
+            return if (mAudioManager != null) {
+                mAudioManager!!.getStreamVolume(AudioManager.STREAM_MUSIC)
+            } else 0
+        }
+
+        override fun setVolume(volume: Int) {
+            mAudioManager?.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
+        }
+
         override fun dismissBaseControl() {
             if (!showBaseControl) {
                 lauViewModel.launchUI {
                     delay(2500)
                     clBaseControl?.visibility = View.GONE
+                    changeVolume?.visibility = View.GONE
+                    changeBrightness?.visibility = View.GONE
                 }
             }
 
