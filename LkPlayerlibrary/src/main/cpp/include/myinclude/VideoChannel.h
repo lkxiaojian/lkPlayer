@@ -21,7 +21,7 @@ public:
     VideoChannel(int id, AVCodecContext *avCodecContext,int fps,AVRational time_base,JavaCallHelper *javaCallHelper);
     virtual ~VideoChannel();
     void start();
-    void stop();
+    int stop();
     void start_decode();
     void start_play();
 

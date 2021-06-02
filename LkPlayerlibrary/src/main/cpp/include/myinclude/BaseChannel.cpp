@@ -5,11 +5,11 @@
 #include "BaseChannel.h"
 
 BaseChannel::~BaseChannel() {
-    packets.clear();
-    frames.clear();
     pthread_mutex_destroy(&mutex);
     pthread_cond_destroy(&cond);
-    if(avCodecContext){
+    packets.clear();
+    frames.clear();
+    if(avCodecContext!= nullptr){
         avcodec_close(avCodecContext);
         avcodec_free_context(&avCodecContext);
         avCodecContext= nullptr;

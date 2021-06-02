@@ -51,19 +51,20 @@ VideoChannel::VideoChannel(int id, AVCodecContext *avCodecContext, int fps, AVRa
 }
 
 VideoChannel::~VideoChannel() {
-    avcodec_free_context(&avCodecContext);
-    avCodecContext = nullptr;
+//    avcodec_free_context(&avCodecContext);
+//    avCodecContext = nullptr;
 }
 
-void VideoChannel::stop() {
+int VideoChannel::stop() {
     isPlaying = false;
     javaCallHelper = nullptr;
     packets.setWork(0);
     frames.setWork(0);
-    pthread_mutex_destroy(&mutex);
-    pthread_cond_destroy(&cond);
-    pthread_join(pid_video_decode, nullptr);
-    pthread_join(pid_video_play, nullptr);
+//    pthread_mutex_destroy(&mutex);
+//    pthread_cond_destroy(&cond);
+//    pthread_join(pid_video_decode, nullptr);
+//    pthread_join(pid_video_play, nullptr);
+    return 0;
 }
 
 
@@ -214,6 +215,7 @@ void VideoChannel::start_play() {
 
     releaseAVFrame(&avFrame);
     isPlaying = false;
+
     av_free(&dst_data[0]);
     sws_freeContext(swsContext);
     pthread_mutex_unlock(&mutex);

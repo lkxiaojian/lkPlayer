@@ -35,11 +35,6 @@ AudioChannel::~AudioChannel() {
         swrContext = nullptr;
     }
     DELETE(out_buffers)
-    if (avCodecContext) {
-        avcodec_free_context(&avCodecContext);
-        avCodecContext = nullptr;
-    }
-
 }
 
 void *task_audio_decode(void *args) {
@@ -63,15 +58,14 @@ void AudioChannel::start() {
     pthread_create(&pid_audio_play, nullptr, task_audio_play, this);
 }
 
-void AudioChannel::stop() {
+int AudioChannel::stop() {
     isPlaying = false;
     javaCallHelper = nullptr;
     packets.setWork(0);
     frames.setWork(0);
-    pthread_mutex_destroy(&mutex);
-    pthread_cond_destroy(&cond);
     pthread_join(pid_audio_decode, nullptr);
     pthread_join(pid_audio_play, nullptr);
+
     if (swrContext) {
         swr_free(&swrContext);
         swrContext = 0;
@@ -80,28 +74,27 @@ void AudioChannel::stop() {
     * 7、释放
     */
     //7.1 设置播放器状态为停止状态
-    if (bqPlayerPlay) {
+    if (bqPlayerPlay!= nullptr) {
         (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_STOPPED);
     }
     //7.2 销毁播放器
-    if (bqPlayerObject) {
+    if (bqPlayerObject!= nullptr) {
         (*bqPlayerObject)->Destroy(bqPlayerObject);
         bqPlayerObject = nullptr;
         bqPlayerBufferQueue = nullptr;
     }
     //7.3 销毁混音器
-    if (outputMixObject) {
+    if (outputMixObject!= nullptr) {
         (*outputMixObject)->Destroy(outputMixObject);
         outputMixObject = nullptr;
     }
     //7.4 销毁引擎
-    if (engineObject) {
+    if (engineObject!= nullptr) {
         (*engineObject)->Destroy(engineObject);
         engineObject = nullptr;
         engineInterface = nullptr;
     }
-
-
+    return 0;
 }
 
 /**

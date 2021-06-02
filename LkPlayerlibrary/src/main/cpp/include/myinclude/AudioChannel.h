@@ -19,7 +19,7 @@ public:
     AudioChannel(int id, AVCodecContext *avCodecContext,AVRational time_base,JavaCallHelper *javaCallHelper);
     virtual ~AudioChannel();
     void start();
-    void stop();
+    int stop();
 
     void start_audio_decode();
 

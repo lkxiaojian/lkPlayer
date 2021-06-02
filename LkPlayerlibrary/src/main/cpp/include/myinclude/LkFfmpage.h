@@ -36,7 +36,7 @@ public:
 
     void stop();
 
-    void _stop(LkFfmpage *lkFfmpage);
+    jint _stop(LkFfmpage *lkFfmpage);
 
     int getDuration() const;
 

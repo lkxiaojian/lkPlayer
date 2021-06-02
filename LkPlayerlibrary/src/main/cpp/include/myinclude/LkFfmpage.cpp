@@ -177,11 +177,11 @@ void LkFfmpage::start() {
  */
 void LkFfmpage::_start() {
     while (isPlaying) {
-        if (videoChannel->packets.size() > 100) {
+        if (videoChannel!= nullptr&&videoChannel->packets.size() > 100) {
             av_usleep(10 * 1000);
             continue;
         }
-        if (audioChannel->packets.size() > 100) {
+        if (audioChannel!= nullptr&&audioChannel->packets.size() > 100) {
             av_usleep(10 * 1000);
             continue;
         }
@@ -236,11 +236,11 @@ void LkFfmpage::stop() {
     pthread_create(&pid_sop, nullptr, task_stop, this);
 }
 
-void LkFfmpage::_stop(LkFfmpage *lkFfmpage) {
+int LkFfmpage::_stop(LkFfmpage *lkFfmpage) {
     isPlaying = false;
-    javaCallHelper = nullptr;
+
     //保证prepare 中的子线程执行完成了再执行后续的炒作  阻塞(sè)后面的方法
-    pthread_join(pid_prepare, nullptr);
+    pthread_join(pid_prepare, 0);
     if (avFormatContext) {
         avformat_close_input(&avFormatContext);
         avformat_free_context(avFormatContext);
@@ -250,7 +250,7 @@ void LkFfmpage::_stop(LkFfmpage *lkFfmpage) {
     DELETE(videoChannel)
     DELETE(audioChannel)
     DELETE(lkFfmpage)
-    return;
+    return 0;
 }
 
 int LkFfmpage::getDuration() const {
