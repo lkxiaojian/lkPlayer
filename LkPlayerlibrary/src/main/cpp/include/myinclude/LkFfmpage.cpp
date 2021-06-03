@@ -177,11 +177,11 @@ void LkFfmpage::start() {
  */
 void LkFfmpage::_start() {
     while (isPlaying) {
-        if (videoChannel!= nullptr&&videoChannel->packets.size() > 100) {
+        if (videoChannel != nullptr && videoChannel->packets.size() > 100) {
             av_usleep(10 * 1000);
             continue;
         }
-        if (audioChannel!= nullptr&&audioChannel->packets.size() > 100) {
+        if (audioChannel != nullptr && audioChannel->packets.size() > 100) {
             av_usleep(10 * 1000);
             continue;
         }
@@ -200,7 +200,11 @@ void LkFfmpage::_start() {
             //要考虑读完了，是否播放完了的情况
             if (videoChannel->packets.empty() && videoChannel->frames.empty() &&
                 audioChannel->packets.empty() && audioChannel->frames.empty()) {
+                //播放完成
                 av_packet_free(&avPacket);
+                if (javaCallHelper) {
+                    javaCallHelper->onComplete(THREAD_CHILD);
+                }
                 break;
             }
         } else {
@@ -302,5 +306,16 @@ void LkFfmpage::setPauseOrResume(bool flag) {
     }
 
 
+}
+
+int LkFfmpage::getCurrentTime() {
+    if (audioChannel) {
+        return audioChannel->audio_time;
+    }
+    if (videoChannel) {
+        return videoChannel->audio_time;
+    }
+
+    return 0;
 }
 

@@ -179,6 +179,7 @@ void VideoChannel::start_play() {
         if (!audioChannel) {
             //没有音频
             av_usleep((delay_time_per_frame + extra_delay) * 1000000);
+            audio_time=video_time;
             if (javaCallHelper) {
                 javaCallHelper->onProgress(THREAD_CHILD, video_time);
             }

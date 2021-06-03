@@ -13,8 +13,9 @@ JavaCallHelper::JavaCallHelper(JNIEnv *jniEnv_, jobject instance_, JavaVM *javaV
     this->instance = jniEnv->NewGlobalRef(instance_);
     jclass clazz = jniEnv->GetObjectClass(instance);
     jmd_prepared = jniEnv->GetMethodID(clazz, "onPrepared", "()V");
-    jmd_error=jniEnv->GetMethodID(clazz,"onPlayError","(I)V");
-    jmd_progress=jniEnv->GetMethodID(clazz,"setProgress","(I)V");
+    jmd_error = jniEnv->GetMethodID(clazz, "onPlayError", "(I)V");
+    jmd_progress = jniEnv->GetMethodID(clazz, "setProgress", "(I)V");
+    jmd_complete=jniEnv->GetMethodID(clazz,"onComplete","()V");
 
 }
 
@@ -42,16 +43,17 @@ void JavaCallHelper::onPrepared(int thread) {
  * @param thread
  * @param errCode
  */
-void JavaCallHelper::onError(int thread,int errCode) {
+void JavaCallHelper::onError(int thread, int errCode) {
     if (thread == THREAD_MAIN) {
-        jniEnv->CallVoidMethod(instance, jmd_error,errCode);
+        jniEnv->CallVoidMethod(instance, jmd_error, errCode);
     } else {
         JNIEnv *env_child = nullptr;
         javaVm->AttachCurrentThread(&env_child, nullptr);
-        env_child->CallVoidMethod(instance, jmd_error,errCode);
+        env_child->CallVoidMethod(instance, jmd_error, errCode);
         javaVm->DetachCurrentThread();
     }
 }
+
 /**
  *  回调进度
  * @param thread
@@ -59,15 +61,29 @@ void JavaCallHelper::onError(int thread,int errCode) {
  */
 void JavaCallHelper::onProgress(int thread, int progress) {
     if (thread == THREAD_MAIN) {
-        jniEnv->CallVoidMethod(instance, jmd_progress,progress);
+        jniEnv->CallVoidMethod(instance, jmd_progress, progress);
     } else {
         JNIEnv *env_child = nullptr;
         javaVm->AttachCurrentThread(&env_child, nullptr);
-        env_child->CallVoidMethod(instance, jmd_progress,progress);
+        env_child->CallVoidMethod(instance, jmd_progress, progress);
         javaVm->DetachCurrentThread();
     }
 
 }
+
+
+
+void JavaCallHelper::onComplete(int thread) {
+    if (thread == THREAD_MAIN) {
+        jniEnv->CallVoidMethod(instance, jmd_complete);
+    } else {
+        JNIEnv *env_child = nullptr;
+        javaVm->AttachCurrentThread(&env_child, nullptr);
+        env_child->CallVoidMethod(instance, jmd_complete);
+        javaVm->DetachCurrentThread();
+    }
+}
+
 
 
 

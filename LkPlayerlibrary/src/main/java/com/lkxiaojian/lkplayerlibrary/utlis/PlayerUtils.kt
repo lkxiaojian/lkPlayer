@@ -164,14 +164,14 @@ object PlayerUtils {
     fun savePlayPosition(
         context: Context,
         url: String?,
-        position: Long
+        position: Int
     ) {
         context.getSharedPreferences(
             "VIDEO_PALYER_PLAY_POSITION",
             Context.MODE_PRIVATE
         )
             .edit()
-            .putLong(url, position)
+            .putInt(url, position)
             .apply()
     }
 
@@ -185,11 +185,11 @@ object PlayerUtils {
     fun getSavedPlayPosition(
         context: Context,
         url: String?
-    ): Long {
+    ): Int {
         return context.getSharedPreferences(
             "VIDEO_PALYER_PLAY_POSITION",
             Context.MODE_PRIVATE
         )
-            .getLong(url, 0)
+            .getInt(url, 0)
     }
 }

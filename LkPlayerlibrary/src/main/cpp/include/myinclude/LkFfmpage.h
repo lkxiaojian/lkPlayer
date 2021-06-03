@@ -44,6 +44,8 @@ public:
 
     void setPauseOrResume(bool flag);
 
+    int getCurrentTime();
+
 private:
     JavaCallHelper *javaCallHelper = 0;
     AudioChannel *audioChannel = 0;

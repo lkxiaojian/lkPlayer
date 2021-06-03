@@ -40,6 +40,7 @@ class LkPlayer : SurfaceHolder.Callback {
         this.surfaceHolder = surfaceView.holder
         this.surfaceHolder?.addCallback(this)
     }
+
     fun start() {
         nativeStart()
     }
@@ -50,6 +51,10 @@ class LkPlayer : SurfaceHolder.Callback {
 
     fun prepare() {
         nativePrepare(dataSource)
+    }
+
+    fun getCurrentTime(): Int {
+        return getNativeCurrentTime()
     }
 
     /**
@@ -116,7 +121,7 @@ class LkPlayer : SurfaceHolder.Callback {
      *
      * @param flag true 暂停 false 继续播放
      */
-    fun setPauseOrResume(flag: Boolean){
+    fun setPauseOrResume(flag: Boolean) {
         nativePauseOrResume(flag)
     }
 
@@ -134,6 +139,10 @@ class LkPlayer : SurfaceHolder.Callback {
         progressListener?.progress(progress)
     }
 
+    fun onComplete() {
+        playListener?.onComplete()
+    }
+
 
     external fun setSurfaceNative(surface: Surface): String
     external fun nativePrepare(url: String): String
@@ -141,6 +150,7 @@ class LkPlayer : SurfaceHolder.Callback {
     external fun nativeRelease()
     external fun nativeStop()
     external fun getNativeDuration(): Int
+    external fun getNativeCurrentTime(): Int
     external fun setNativeSeekTo(progress: Int)
-    external fun nativePauseOrResume(flag:Boolean)
+    external fun nativePauseOrResume(flag: Boolean)
 }

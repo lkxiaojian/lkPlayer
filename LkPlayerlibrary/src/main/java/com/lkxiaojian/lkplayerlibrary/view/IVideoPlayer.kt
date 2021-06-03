@@ -6,7 +6,7 @@ package com.lkxiaojian.lkplayerlibrary.view
  *description： IVideoPlayer
  */
 interface IVideoPlayer {
-    fun setTitle(title:String): VideoPlayer.Builder
+    fun setTitle(title: String): VideoPlayer.Builder
 
     /**
      * TODO 开始播放
@@ -21,7 +21,8 @@ interface IVideoPlayer {
      * @param url
      * @return
      */
-    fun setPath(url:String): VideoPlayer.Builder
+    fun setPath(url: String): VideoPlayer.Builder
+
 
 
     /**
@@ -30,15 +31,21 @@ interface IVideoPlayer {
      * @param flag true 全屏  false 正常用户设置的大小
      * @return
      */
-    fun setFullScreen(flag: Boolean):VideoPlayer.Builder
+    fun setFullScreen(flag: Boolean): VideoPlayer.Builder
 
     /**
      * TODO 获取视频的时长（秒）
      *
      * @return 单位 s 秒
      */
-    fun getDuration():Int
+    fun getDuration(): Int
 
+    /**
+     * TODO 获取当前播放的进度 （秒）
+     *
+     * @return
+     */
+    fun getCurrentTime(): Int
     /**
      * 获取最大音量
      *
@@ -61,6 +68,13 @@ interface IVideoPlayer {
      */
     fun setVolume(volume: Int)
 
+    /**
+     * TODO 设置播放进度
+     *
+     * @param time
+     */
+    fun seekTo(time:Int)
+
 
     fun dismissBaseControl()
 
@@ -75,10 +89,9 @@ interface IVideoPlayer {
      *
      * @param flag true 暂停 false 播放
      */
-   fun setPauseOrResume(flag:Boolean): VideoPlayer.Builder
+    fun setPauseOrResume(flag: Boolean): VideoPlayer.Builder
 
     fun destory()
-
 
 
 }

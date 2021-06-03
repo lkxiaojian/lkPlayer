@@ -42,8 +42,11 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
     var lauViewModel: LauViewModel
     var duration = 0
     val THRESHOLD = 80
-    var mGestureDownBrightness:Float? = 0f
-     var mGestureDownVolume = 0
+    var mGestureDownBrightness: Float? = 0f
+    var mGestureDownVolume = 0
+    var mGestureDownPosition=0
+    var mNewPosition=-1
+    var isMoveing=false//是否在滑动屏幕跳动进度条
 
     val TAG = "player"
 
@@ -82,14 +85,28 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
         resumeOrPause?.setOnClickListener(this)
         aivFullScreen?.setOnClickListener(this)
         aivBack?.setOnClickListener(this)
-        setOnTouchListener(this)
+//        setOnTouchListener(this)
+    }
+
+    fun showChangePosition(currentTime: Int) {
+        lauViewModel.launchUI {
+
+            if (duration != 0) {
+                val formatTime = PlayerUtils.formatTime(currentTime.toLong())
+                atvPosition?.text = formatTime
+                val i = currentTime * 100 / duration
+                seekBar?.progress = i
+            }
+        }
     }
 
     fun setCurrentTimeTime(currentTime: Int) {
         lauViewModel.launchUI {
-            val timeByS = PlayerUtils.formatTime(currentTime.toLong())
-            atvPosition?.text = timeByS
-            if (duration != 0 && !isTouch) {
+            if(!isMoveing) {
+                val timeByS = PlayerUtils.formatTime(currentTime.toLong())
+                atvPosition?.text = timeByS
+            }
+            if (duration != 0 && !isTouch&&!isMoveing) {
                 if (isSeek) {
                     isSeek = false
                     return@launchUI
@@ -107,13 +124,13 @@ abstract class BasePlayerController(context: Context, attrs: AttributeSet?) :
         }
     }
 
-   protected fun showChangeVolume( newVolumeProgress:Int){
+    protected fun showChangeVolume(newVolumeProgress: Int) {
         changeVolume?.visibility = View.VISIBLE
-       changeBrightness?.visibility = View.GONE
+        changeBrightness?.visibility = View.GONE
         change_volume_progress?.progress = newVolumeProgress
     }
 
-    protected fun showChangeBrightness( newVolumeProgress:Int){
+    protected fun showChangeBrightness(newVolumeProgress: Int) {
         changeBrightness?.visibility = View.VISIBLE
         changeVolume?.visibility = View.GONE
         change_brightness_progress?.progress = newVolumeProgress

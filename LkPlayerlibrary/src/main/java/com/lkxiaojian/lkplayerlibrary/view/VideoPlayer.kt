@@ -69,7 +69,7 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
                 isTouch = false
                 isSeek = true
 //                mCurrentState.value = PlayStatus.STATE_PLAYING
-                player.seekTo(i)
+                builder.seekTo(i)
             }
         })
         mCurrentState.observeForever {
@@ -153,18 +153,29 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
                 showBaseControl = true
                 clBaseControl?.visibility = View.VISIBLE
             }
-            MotionEvent.ACTION_UP , MotionEvent.ACTION_CANCEL -> {
-                showBaseControl = false
-                builder.dismissBaseControl()
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (mNewPosition != -1 && duration != 0) {
+                    builder.seekTo(mNewPosition)
+                }
+                lauViewModel.launchUI {
+                    delay(100)
+                    isMoveing = false
+                    showBaseControl = false
+                    builder.dismissBaseControl()
+                    mNewPosition = -1
+                }
+
+
             }
             MotionEvent.ACTION_MOVE -> {
+                isMoveing = true
                 showBaseControl = true
                 if (mCurrentState.value == PlayStatus.STATE_PLAYING ||
                     mCurrentState.value == PlayStatus.STATE_PAUSED ||
                     mCurrentState.value == PlayStatus.STATE_BUFFERING_PLAYING ||
                     mCurrentState.value == PlayStatus.STATE_BUFFERING_PAUSED
                 ) {
-                    val deltaX: Float = x - mDownX
+                    var deltaX: Float = x - mDownX
                     var deltaY: Float = y - mDownY
                     val absDeltaX = abs(deltaX)
                     val absDeltaY = abs(deltaY)
@@ -172,41 +183,58 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
 
                     // 只有在播放、暂停、缓冲的时候能够拖动改变位置、亮度和声音
                     if (absDeltaX >= THRESHOLD) {
+                        //改变进度
+                        lauViewModel.launchUI {
+                            mGestureDownPosition = builder.getCurrentTime()
+                            duration = builder.getDuration()
+                            val toPosition =
+                                (mGestureDownPosition + duration * deltaX / 2 / width).toInt()
+                            mNewPosition =
+                                0.coerceAtLeast(duration.coerceAtMost(toPosition))
+                            Log.e(TAG, "mNewPosition-->$mNewPosition")
+//                            val newPositionProgress = (100f * mNewPosition / duration).toInt()
+                            showChangePosition(mNewPosition)
+                        }
+
 
                     } else if (absDeltaY >= THRESHOLD) {
                         if (mDownX < width * 0.5f) {
                             // 左侧改变亮度
-                            mGestureDownBrightness =
-                                PlayerUtils.scanForActivity(mContext)?.window?.attributes?.screenBrightness
-                            deltaY = -deltaY
-                            val deltaBrightness = deltaY / 8 / height
-                            var newBrightness =
-                                mGestureDownBrightness!! + deltaBrightness
-                            newBrightness =
-                                0f.coerceAtLeast(newBrightness.coerceAtMost(1f))
-                            val newBrightnessPercentage = newBrightness
-                            val params: WindowManager.LayoutParams? =
-                                PlayerUtils.scanForActivity(mContext)
-                                    ?.window?.attributes
-                            params?.screenBrightness = newBrightnessPercentage
-                            PlayerUtils.scanForActivity(mContext)?.window?.attributes = params
-                            val newBrightnessProgress = (100f * newBrightnessPercentage).toInt()
-                            showChangeBrightness(newBrightnessProgress)
+                            lauViewModel.launchUI {
+                                mGestureDownBrightness =
+                                    PlayerUtils.scanForActivity(mContext)?.window?.attributes?.screenBrightness
+                                deltaY = -deltaY
+                                val deltaBrightness = deltaY / 20 / height
+                                var newBrightness =
+                                    mGestureDownBrightness!! + deltaBrightness
+                                newBrightness =
+                                    0f.coerceAtLeast(newBrightness.coerceAtMost(1f))
+                                val newBrightnessPercentage = newBrightness
+                                val params: WindowManager.LayoutParams? =
+                                    PlayerUtils.scanForActivity(mContext)
+                                        ?.window?.attributes
+                                params?.screenBrightness = newBrightnessPercentage
+                                PlayerUtils.scanForActivity(mContext)?.window?.attributes = params
+                                val newBrightnessProgress = (100f * newBrightnessPercentage).toInt()
+                                Log.e(TAG, "newBrightnessProgress-->$newBrightnessProgress")
+                                showChangeBrightness(newBrightnessProgress)
+                            }
 
 
                         } else {
                             // 右侧改变声音
-                            mGestureDownVolume = builder.getVolume()
-
-                            deltaY = -deltaY
-                            val maxVolume: Int = builder.getMaxVolume()
-                            val deltaVolume = (maxVolume * deltaY / 8 / height).toInt()
-                            var newVolume = mGestureDownVolume + deltaVolume
-                            newVolume =
-                                0.coerceAtLeast(maxVolume.coerceAtMost(newVolume))
-                            builder.setVolume(newVolume)
-                            val newVolumeProgress = (100f * newVolume / maxVolume).toInt()
-                            showChangeVolume(newVolumeProgress)
+                            lauViewModel.launchUI {
+                                mGestureDownVolume = builder.getVolume()
+                                deltaY = -deltaY
+                                val maxVolume: Int = builder.getMaxVolume()
+                                val deltaVolume = (maxVolume * deltaY / 20 / height).toInt()
+                                var newVolume = mGestureDownVolume + deltaVolume
+                                newVolume =
+                                    0.coerceAtLeast(maxVolume.coerceAtMost(newVolume))
+                                builder.setVolume(newVolume)
+                                val newVolumeProgress = (100f * newVolume / maxVolume).toInt()
+                                showChangeVolume(newVolumeProgress)
+                            }
                         }
                     }
 
@@ -301,8 +329,10 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
 
             override fun onPrepared() {
                 setTotalTime(builder.getDuration())
-                setCurrentTimeTime(0)
+                val savedPlayPosition = PlayerUtils.getSavedPlayPosition(mContext, path)
+                setCurrentTimeTime(savedPlayPosition)
                 player.start()
+                player.seekTo(savedPlayPosition)
                 player.setProgressListener(this@VideoPlayer)
                 lauViewModel.launchUI {
                     mCurrentState.value = PlayStatus.STATE_PLAYING
@@ -311,6 +341,10 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
 
                 }
                 builder.dismissBaseControl()
+            }
+
+            override fun onComplete() {
+
             }
         })
     }
@@ -372,6 +406,10 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
             return duration
         }
 
+        override fun getCurrentTime(): Int {
+            return player.getCurrentTime()
+        }
+
         override fun getMaxVolume(): Int {
             return if (mAudioManager != null) {
                 mAudioManager!!.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
@@ -388,10 +426,14 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
             mAudioManager?.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
         }
 
+        override fun seekTo(time: Int) {
+            player.seekTo(time)
+        }
+
         override fun dismissBaseControl() {
             if (!showBaseControl) {
                 lauViewModel.launchUI {
-                    delay(2500)
+                    delay(30000)
                     clBaseControl?.visibility = View.GONE
                     changeVolume?.visibility = View.GONE
                     changeBrightness?.visibility = View.GONE
@@ -401,6 +443,7 @@ class VideoPlayer(context: Context, attrs: AttributeSet?) : BasePlayerController
         }
 
         override fun stop(): Builder {
+            PlayerUtils.savePlayPosition(mContext, path, getCurrentTime())
             player.stop()
             return this
         }

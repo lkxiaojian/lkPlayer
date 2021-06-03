@@ -64,6 +64,10 @@ class MainActivity : AppCompatActivity() {
                 lkPlayer.nativeStart()
             }
 
+            override fun onComplete() {
+
+            }
+
         })
         lkPlayer.setProgressListener(object : ProgressListener {
             override fun progress(progress: Int) {

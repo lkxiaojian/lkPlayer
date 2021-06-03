@@ -9,6 +9,7 @@ package com.lkxiaojian.lkplayerlibrary.`interface`
 interface PlayListener {
     fun onError(errorCode: Int)
     fun onPrepared()
+    fun onComplete()
 }
 
 interface ProgressListener {
