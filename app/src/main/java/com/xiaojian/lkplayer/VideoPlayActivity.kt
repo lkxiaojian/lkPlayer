@@ -14,7 +14,7 @@ import java.io.File
 class VideoPlayActivity : AppCompatActivity() {
     private lateinit var binding: ActivityVideoPlayBinding
     private lateinit var builder: VideoPlayer.Builder
-    val  TAG="VideoPlayActivity"
+    val TAG = "VideoPlayActivity"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val url = intent.getStringExtra("url")
@@ -29,13 +29,16 @@ class VideoPlayActivity : AppCompatActivity() {
             override fun hasPermission(granted: MutableList<String>?, all: Boolean) {
                 if (all) {
                     url?.let {
-                        Log.e(TAG,"$TAG file ${File(url).exists()} ")
+                        val file = File(url)
+
                         builder.setPath(it)
                             .setFullScreen(true)
+                            .setTitle(file.name)
                             .start()
                     }
                 }
             }
+
             override fun noPermission(denied: MutableList<String>?, never: Boolean) {
                 XXPermissions.startPermissionActivity(this@VideoPlayActivity, denied)
             }
@@ -46,18 +49,18 @@ class VideoPlayActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        Log.e(TAG,"$TAG onResume ")
+        Log.e(TAG, "$TAG onResume ")
     }
 
     override fun onStop() {
         super.onStop()
-        Log.e(TAG,"$TAG onStop ")
+        Log.e(TAG, "$TAG onStop ")
         builder.stop()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.e(TAG,"$TAG onDestroy ")
+        Log.e(TAG, "$TAG onDestroy ")
         builder.destory()
     }
 }
