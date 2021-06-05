@@ -54,7 +54,7 @@ void AudioChannel::start() {
     isPlaying = true;
     packets.setWork(1);
     frames.setWork(1);
-    pthread_create(&pid_audio_decode, nullptr, task_audio_decode, this);
+//    pthread_create(&pid_audio_decode, nullptr, task_audio_decode, this);
     pthread_create(&pid_audio_play, nullptr, task_audio_play, this);
 }
 
@@ -132,8 +132,7 @@ void AudioChannel::start_audio_decode() {
         //ret=0 数据收发正常。成功获取视频原始数据包
         while (isPlaying && frames.size() > 100) {
             av_usleep(10 * 1000);
-            continue;
-        }
+       }
         frames.push(avFrame);
     }
     releaseAVPacket(&packet);

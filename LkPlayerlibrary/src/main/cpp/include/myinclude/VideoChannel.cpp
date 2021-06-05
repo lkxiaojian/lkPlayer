@@ -46,7 +46,7 @@ VideoChannel::VideoChannel(int id, AVCodecContext *avCodecContext, int fps, AVRa
                       avCodecContext, time_base, javaCallHelper) {
 
     this->fps = fps;
-    packets.setSyncOpt(dropAVPacket);
+//    packets.setSyncOpt(dropAVPacket);
     frames.setSyncOpt(dropAVFrame);
 }
 
@@ -85,7 +85,7 @@ void VideoChannel::start() {
     isPlaying = true;
     packets.setWork(1);
     frames.setWork(1);
-    pthread_create(&pid_video_decode, nullptr, video_decode, this);
+//    pthread_create(&pid_video_decode, nullptr, video_decode, this);
     pthread_create(&pid_video_play, nullptr, video_play, this);
 }
 
@@ -94,7 +94,10 @@ void VideoChannel::start() {
  */
 void VideoChannel::start_decode() {
     AVPacket *packet = nullptr;
+
+
     while (isPlaying) {
+
         int ret = packets.pop(packet);
         if (!isPlaying) {
             //如果停止播放了，跳出循环 释放packet
@@ -124,7 +127,6 @@ void VideoChannel::start_decode() {
         //ret=0 数据收发正常。成功获取视频原始数据包
         while (isPlaying && frames.size() > 100) {
             av_usleep(10 * 1000);
-            continue;
         }
 
         frames.push(avFrame);
@@ -201,7 +203,8 @@ void VideoChannel::start_play() {
                 if (fabs(time_diff) >= 0.05) {
                     //时间大于0。05 ，有明显的的延迟感
                     //丢包：要操作队列的中的数据
-                    packets.sync();
+//                    packets.sync();
+                    releaseAVFrame(&avFrame);
 //                    frames.sync();
                     continue;
                 }

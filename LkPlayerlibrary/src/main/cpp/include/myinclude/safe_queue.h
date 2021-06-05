@@ -127,8 +127,7 @@ public:
      */
     void sync() {
         pthread_mutex_lock(&mutex);
-
-
+        syncOpt(q);
         pthread_mutex_unlock(&mutex);
     }
 

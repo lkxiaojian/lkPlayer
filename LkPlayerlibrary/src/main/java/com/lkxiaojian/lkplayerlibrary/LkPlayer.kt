@@ -15,7 +15,12 @@ import com.lkxiaojian.lkplayerlibrary.`interface`.ProgressListener
 class LkPlayer : SurfaceHolder.Callback {
     companion object {
         init {
-            System.loadLibrary("lkplayer")
+            try {
+                System.loadLibrary("lkplayer")
+            }catch (e:Exception){
+
+            }
+
         }
 
         fun getInstance(): LkPlayer {

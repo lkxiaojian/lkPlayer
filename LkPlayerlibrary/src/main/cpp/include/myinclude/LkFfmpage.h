@@ -1,3 +1,4 @@
+#include <alloca.h>
 //
 // Created by root on 2021/5/17.
 //
@@ -32,6 +33,9 @@ public:
 
     void _start();
 
+     void  start_decode(AVPacket *packet,AVCodecContext *avCodecContext,int type);
+
+
     void setRenderCallBack(RenderCallBack renderCallBack);
 
     void stop();
@@ -57,6 +61,8 @@ private:
     pthread_mutex_t seekMutex;
     bool isPlaying;
     AVFormatContext *avFormatContext = nullptr;
+    AVCodecContext *avVideoCodecContext;
+    AVCodecContext *avAudioCodecContext;
     RenderCallBack renderCallBack;
     int duration = 0;
 
