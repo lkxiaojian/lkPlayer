@@ -193,9 +193,7 @@ void LkFfmpage::_start() {
         }
 
         AVPacket *avPacket = av_packet_alloc();
-//        pthread_mutex_lock(&seekMutex);
         int ret = av_read_frame(avFormatContext, avPacket);
-//        pthread_mutex_unlock(&seekMutex);
         if (!ret) {
             if (videoChannel && avPacket->stream_index == videoChannel->id) {
 //                videoChannel->packets.push(avPacket);

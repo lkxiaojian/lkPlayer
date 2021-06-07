@@ -67,13 +67,11 @@ void renderFrame(uint8_t *src_data, int src_lineSize, int width, int height) {
  * @param thiz
  */
 void nativeRelease(JNIEnv *env, jobject thiz) {
-//    pthread_mutex_lock(&mutex);
-//    pthread_mutex_unlock(&mutex);
+
     if (window) {
         ANativeWindow_release(window);
         window = nullptr;
     }
-//    pthread_mutex_unlock(&mutex);
     DELETE(lkFfmpage);
 
     return;

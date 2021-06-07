@@ -222,8 +222,7 @@ void VideoChannel::start_play() {
 
     releaseAVFrame(&avFrame);
     isPlaying = false;
-
-    av_free(&dst_data[0]);
+    av_freep(&dst_data[0]);
     sws_freeContext(swsContext);
 //    pthread_mutex_unlock(&mutex);
 }
