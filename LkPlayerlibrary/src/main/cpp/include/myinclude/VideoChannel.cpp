@@ -137,7 +137,7 @@ void VideoChannel::start_decode() {
 }
 
 void VideoChannel::start_play() {
-    pthread_mutex_lock(&mutex);
+//    pthread_mutex_lock(&mutex);
     AVFrame *avFrame = nullptr;
     //对原始数据进行转换yuv->rgba
     SwsContext *swsContext = sws_getContext(avCodecContext->width, avCodecContext->height,
@@ -213,7 +213,10 @@ void VideoChannel::start_play() {
 
         //dst_data :AV_PIX_FMT_RGBA格式的数据
         //渲染，回调出去 native-lib
-        renderCallBack(dst_data[0], det_linesize[0], avCodecContext->width, avCodecContext->height);
+        if(isPlaying){
+            renderCallBack(dst_data[0], det_linesize[0], avCodecContext->width, avCodecContext->height);
+        }
+
         releaseAVFrame(&avFrame);
     }
 
@@ -222,9 +225,7 @@ void VideoChannel::start_play() {
 
     av_free(&dst_data[0]);
     sws_freeContext(swsContext);
-    pthread_mutex_unlock(&mutex);
-    return;
-
+//    pthread_mutex_unlock(&mutex);
 }
 
 void VideoChannel::setRenderCallBack(RenderCallBack back) {

@@ -17,6 +17,7 @@ JavaVM *javaVm = nullptr;
 ANativeWindow *window = nullptr;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 LkFfmpage *lkFfmpage = nullptr;
+bool isPlaying = false;
 static const char *mClassName = "com/lkxiaojian/lkplayerlibrary/LkPlayer";
 
 /**
@@ -27,7 +28,11 @@ static const char *mClassName = "com/lkxiaojian/lkplayerlibrary/LkPlayer";
  * @param height
  */
 void renderFrame(uint8_t *src_data, int src_lineSize, int width, int height) {
+    if(!isPlaying){
+        return;
+    }
     pthread_mutex_lock(&mutex);
+
     if (window == nullptr) {
         pthread_mutex_unlock(&mutex);
         return;
@@ -80,6 +85,7 @@ void nativeRelease(JNIEnv *env, jobject thiz) {
  * @param thiz
  */
 void nativeStop(JNIEnv *env, jobject thiz) {
+    isPlaying = false;
     if (lkFfmpage) {
         lkFfmpage->stop();
     }
@@ -113,6 +119,7 @@ void setSeekTo(JNIEnv *env, jobject thiz, jint progress) {
  * @return
  */
 jstring nativePrepare(JNIEnv *env, jobject thiz, jstring url) {
+    isPlaying = true;
     const char *path = env->GetStringUTFChars(url, nullptr);
     auto *javaCallHelper = new JavaCallHelper(env, thiz, javaVm);
     lkFfmpage = new LkFfmpage(javaCallHelper, const_cast<char *>(path));

@@ -142,7 +142,7 @@ void AudioChannel::start_audio_decode() {
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
     auto *audioChannel = static_cast<AudioChannel *>(context);
     int pcm_size = audioChannel->getPCM();
-    if (pcm_size > 0) {
+    if (pcm_size > 0&& audioChannel->isPlaying) {
         (*bq)->Enqueue(bq, audioChannel->out_buffers, pcm_size);
     }
 }
@@ -151,6 +151,9 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
  * 音频播放
  */
 void AudioChannel::start_audio_play() {
+    if(!isPlaying){
+        return;
+    }
     /**
     * 1、创建引擎并获取引擎接口
     */
@@ -254,12 +257,10 @@ void AudioChannel::start_audio_play() {
 }
 
 int AudioChannel::getPCM() {
-    pthread_mutex_lock(&mutex);
+//    pthread_mutex_lock(&mutex);
 
     int pcm_data_size = 0;
     AVFrame *frame = nullptr;
-
-
     while (isPlaying) {
         if (isPause) {
             pthread_cond_wait(&cond, &mutex);
@@ -302,13 +303,13 @@ int AudioChannel::getPCM() {
         pcm_data_size = out_samples * out_sampleSize * out_channels;
         //获取音频时间
         audio_time = frame->best_effort_timestamp * av_q2d(time_base);
-        if (javaCallHelper) {
+        if (javaCallHelper&&isPlaying) {
             javaCallHelper->onProgress(THREAD_CHILD, audio_time);
         }
         break;
 
     }//end while
-    pthread_mutex_unlock(&mutex);
+//    pthread_mutex_unlock(&mutex);
     releaseAVFrame(&frame);
     return pcm_data_size;
 
