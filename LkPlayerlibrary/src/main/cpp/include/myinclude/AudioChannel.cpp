@@ -74,22 +74,22 @@ int AudioChannel::stop() {
     * 7、释放
     */
     //7.1 设置播放器状态为停止状态
-    if (bqPlayerPlay!= nullptr) {
+    if (bqPlayerPlay != nullptr) {
         (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_STOPPED);
     }
     //7.2 销毁播放器
-    if (bqPlayerObject!= nullptr) {
+    if (bqPlayerObject != nullptr) {
         (*bqPlayerObject)->Destroy(bqPlayerObject);
         bqPlayerObject = nullptr;
         bqPlayerBufferQueue = nullptr;
     }
     //7.3 销毁混音器
-    if (outputMixObject!= nullptr) {
+    if (outputMixObject != nullptr) {
         (*outputMixObject)->Destroy(outputMixObject);
         outputMixObject = nullptr;
     }
     //7.4 销毁引擎
-    if (engineObject!= nullptr) {
+    if (engineObject != nullptr) {
         (*engineObject)->Destroy(engineObject);
         engineObject = nullptr;
         engineInterface = nullptr;
@@ -132,7 +132,7 @@ void AudioChannel::start_audio_decode() {
         //ret=0 数据收发正常。成功获取视频原始数据包
         while (isPlaying && frames.size() > 100) {
             av_usleep(10 * 1000);
-       }
+        }
         frames.push(avFrame);
     }
     releaseAVPacket(&packet);
@@ -140,10 +140,14 @@ void AudioChannel::start_audio_decode() {
 
 //4.3 创建回调函数
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
+
+
     auto *audioChannel = static_cast<AudioChannel *>(context);
-    int pcm_size = audioChannel->getPCM();
-    if (pcm_size > 0&& audioChannel->isPlaying) {
-        (*bq)->Enqueue(bq, audioChannel->out_buffers, pcm_size);
+    if (audioChannel->isPlaying) {
+        int pcm_size = audioChannel->getPCM();
+        if (pcm_size > 0 && audioChannel->isPlaying) {
+            (*bq)->Enqueue(bq, audioChannel->out_buffers, pcm_size);
+        }
     }
 }
 
@@ -151,7 +155,7 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
  * 音频播放
  */
 void AudioChannel::start_audio_play() {
-    if(!isPlaying){
+    if (!isPlaying) {
         return;
     }
     /**
@@ -303,7 +307,7 @@ int AudioChannel::getPCM() {
         pcm_data_size = out_samples * out_sampleSize * out_channels;
         //获取音频时间
         audio_time = frame->best_effort_timestamp * av_q2d(time_base);
-        if (javaCallHelper&&isPlaying) {
+        if (javaCallHelper && isPlaying) {
             javaCallHelper->onProgress(THREAD_CHILD, audio_time);
         }
         break;

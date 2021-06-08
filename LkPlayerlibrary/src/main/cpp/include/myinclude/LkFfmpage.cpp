@@ -112,12 +112,12 @@ void LkFfmpage::_prepare() {
             //采样率
             AVRational avRational = stream->r_frame_rate;
             int fps = av_q2d(avRational);
-            avVideoCodecContext=avCodecContext;
+            avVideoCodecContext = avCodecContext;
             videoChannel = new VideoChannel(i, avCodecContext, fps, time_base, javaCallHelper);
             videoChannel->setRenderCallBack(renderCallBack);
         } else if (codecParameters->codec_type == AVMEDIA_TYPE_AUDIO) {
             //音频
-            avAudioCodecContext=avCodecContext;
+            avAudioCodecContext = avCodecContext;
             audioChannel = new AudioChannel(i, avCodecContext, time_base, javaCallHelper);
         }
     }
@@ -175,14 +175,12 @@ void LkFfmpage::start() {
 }
 
 
-
-
 /**
  * 真正播放的逻辑
  */
 void LkFfmpage::_start() {
     while (isPlaying) {
-//        av_usleep(10 * 1000);
+
         if (videoChannel != nullptr && videoChannel->frames.size() > 256) {
             av_usleep(10 * 1000);
             continue;
@@ -196,12 +194,10 @@ void LkFfmpage::_start() {
         int ret = av_read_frame(avFormatContext, avPacket);
         if (!ret) {
             if (videoChannel && avPacket->stream_index == videoChannel->id) {
-//                videoChannel->packets.push(avPacket);
-                start_decode(avPacket,avVideoCodecContext,2);
+                start_decode(avPacket, avVideoCodecContext, 2);
 
             } else if (audioChannel && avPacket->stream_index == audioChannel->id) {
-//                audioChannel->packets.push(avPacket);
-                start_decode(avPacket,avAudioCodecContext,1);
+                start_decode(avPacket, avAudioCodecContext, 1);
             }
         } else if (ret == AVERROR_EOF) {
             //表示读完了
@@ -276,8 +272,10 @@ jint LkFfmpage::setSeekToProgress(int progress) {
     if (!avFormatContext) {
         return -1;
     }
-    pthread_mutex_lock(&seekMutex);
+//    pthread_mutex_lock(&seekMutex);
     int ret = av_seek_frame(avFormatContext, -1, progress * AV_TIME_BASE, AVSEEK_FLAG_BACKWARD);
+//    int ret = avformat_seek_file(avFormatContext, -1, 0, progress * AV_TIME_BASE, duration,
+//                                 AVSEEK_FLAG_BACKWARD);
     if (ret < 0) {
         if (javaCallHelper) {
             javaCallHelper->onError(THREAD_CHILD, ret);
@@ -285,26 +283,25 @@ jint LkFfmpage::setSeekToProgress(int progress) {
     }
 
     if (audioChannel) {
-        audioChannel->packets.setWork(0);
         audioChannel->frames.setWork(0);
-        audioChannel->packets.clear();
         audioChannel->frames.clear();
-        audioChannel->packets.setWork(1);
         audioChannel->frames.setWork(1);
     }
 
     if (videoChannel) {
-        videoChannel->packets.setWork(0);
         videoChannel->frames.setWork(0);
-        videoChannel->packets.clear();
         videoChannel->frames.clear();
-        videoChannel->packets.setWork(1);
         videoChannel->frames.setWork(1);
     }
-    pthread_mutex_unlock(&seekMutex);
+//    pthread_mutex_unlock(&seekMutex);
     return 0;
 }
 
+/**
+ * TODO 设置播放或者暂停
+ *
+ * @param flag true 暂停 false 继续播放
+ */
 void LkFfmpage::setPauseOrResume(bool flag) {
     if (videoChannel) {
         videoChannel->setPauseOrResume(flag);
@@ -327,46 +324,43 @@ int LkFfmpage::getCurrentTime() {
     return 0;
 }
 
- void LkFfmpage::start_decode( AVPacket *packet, AVCodecContext *avCodecContext,int type) {
-        if (!isPlaying) {
-            //如果停止播放了，跳出循环 释放packet
-            return;
-        }
+void LkFfmpage::start_decode(AVPacket *packet, AVCodecContext *avCodecContext, int type) {
+    if (!isPlaying) {
+        //如果停止播放了，跳出循环 释放packet
+        return;
+    }
 
-        //拿到了视频数据包（编码压缩了的），需要把数据包给解码器进行解码
-      int  ret = avcodec_send_packet(avCodecContext, packet);
-        if (ret) {
-            //往解码器发送数据包失败
-            return;
-        }
-        av_packet_free(&packet);
-        packet = nullptr;
-        AVFrame *avFrame = av_frame_alloc();
-        ret = avcodec_receive_frame(avCodecContext, avFrame);
-        if (ret == AVERROR(EAGAIN)) {
-            //重来
-            av_frame_free(&avFrame);
-            return;
-        } else if (ret != 0) {
-            av_frame_free(&avFrame);
-            return;
-        }
-        //ret=0 数据收发正常。成功获取视频原始数据包
+    //拿到了视频数据包（编码压缩了的），需要把数据包给解码器进行解码
+    int ret = avcodec_send_packet(avCodecContext, packet);
+    if (ret) {
+        //往解码器发送数据包失败
+        return;
+    }
+    av_packet_free(&packet);
+    packet = nullptr;
+    AVFrame *avFrame = av_frame_alloc();
+    ret = avcodec_receive_frame(avCodecContext, avFrame);
+    if (ret == AVERROR(EAGAIN)) {
+        //重来
+        av_frame_free(&avFrame);
+        return;
+    } else if (ret != 0) {
+        av_frame_free(&avFrame);
+        return;
+    }
+    //ret=0 数据收发正常。成功获取视频原始数据包
 
 //        while (isPlaying && frames.size() > 100) {
 //            av_usleep(10 * 1000);
 //        }
 
-        if(type==1){
-            audioChannel->frames.push(avFrame);
+    if (type == 1) {
+        audioChannel->frames.push(avFrame);
 //            av_frame_free(&avFrame);
-        } else {
-            videoChannel->frames.push(avFrame);
+    } else {
+        videoChannel->frames.push(avFrame);
 //            av_frame_free(&avFrame);
-        }
-
-
-
+    }
 
 
 }
