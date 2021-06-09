@@ -31,10 +31,10 @@ void renderFrame(uint8_t *src_data, int src_lineSize, int width, int height) {
     if(!isPlaying){
         return;
     }
-    pthread_mutex_lock(&mutex);
+//    pthread_mutex_lock(&mutex);
 
     if (window == nullptr) {
-        pthread_mutex_unlock(&mutex);
+//        pthread_mutex_unlock(&mutex);
         return;
     }
     if (!window) {
@@ -47,7 +47,7 @@ void renderFrame(uint8_t *src_data, int src_lineSize, int width, int height) {
     if (ANativeWindow_lock(window, &window_buffer, nullptr)) {
         ANativeWindow_release(window);
         window = nullptr;
-        pthread_mutex_unlock(&mutex);
+//        pthread_mutex_unlock(&mutex);
         return;
     }
     //把buffer中的数据进行赋值（修改）
@@ -58,7 +58,7 @@ void renderFrame(uint8_t *src_data, int src_lineSize, int width, int height) {
         memcpy(dst_data + i * dst_lineSize, src_data + i * src_lineSize, dst_lineSize);
     }
     ANativeWindow_unlockAndPost(window);
-    pthread_mutex_unlock(&mutex);
+//    pthread_mutex_unlock(&mutex);
 }
 
 /**
@@ -144,14 +144,14 @@ nativeStart(JNIEnv *env, jobject thiz) {
 extern "C"
 JNIEXPORT jstring JNICALL
 setSurfaceNative(JNIEnv *env, jobject thiz, jobject surface) {
-    pthread_mutex_lock(&mutex);
+//    pthread_mutex_lock(&mutex);
     if (window) {
         ANativeWindow_release(window);
         window = nullptr;
     }
 //创建新的窗口用于视频显示
     window = ANativeWindow_fromSurface(env, surface);
-    pthread_mutex_unlock(&mutex);
+//    pthread_mutex_unlock(&mutex);
     return nullptr;
 }
 

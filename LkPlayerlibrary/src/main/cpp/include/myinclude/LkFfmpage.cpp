@@ -13,7 +13,7 @@ LkFfmpage::LkFfmpage(JavaCallHelper *javaCallHelper, char *dataSource) {
     this->javaCallHelper = javaCallHelper;
     this->dataSource = new char[strlen(dataSource) + 1];
     strcpy(this->dataSource, dataSource);
-    pthread_mutex_init(&seekMutex, nullptr);
+//    pthread_mutex_init(&seekMutex, nullptr);
 
 
 }
@@ -21,7 +21,7 @@ LkFfmpage::LkFfmpage(JavaCallHelper *javaCallHelper, char *dataSource) {
 LkFfmpage::~LkFfmpage() {
     DELETE(dataSource)
     DELETE(javaCallHelper)
-    pthread_mutex_destroy(&seekMutex);
+//    pthread_mutex_destroy(&seekMutex);
 }
 
 /**

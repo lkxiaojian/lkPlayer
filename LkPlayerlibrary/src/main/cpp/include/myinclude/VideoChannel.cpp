@@ -58,7 +58,7 @@ VideoChannel::~VideoChannel() {
 int VideoChannel::stop() {
     isPlaying = false;
     javaCallHelper = nullptr;
-    packets.setWork(0);
+//    packets.setWork(0);
     frames.setWork(0);
 //    pthread_mutex_destroy(&mutex);
 //    pthread_cond_destroy(&cond);
@@ -83,7 +83,7 @@ void *video_decode(void *args) {
 
 void VideoChannel::start() {
     isPlaying = true;
-    packets.setWork(1);
+//    packets.setWork(1);
     frames.setWork(1);
 //    pthread_create(&pid_video_decode, nullptr, video_decode, this);
     pthread_create(&pid_video_play, nullptr, video_play, this);
