@@ -52,7 +52,7 @@ void *task_audio_play(void *args) {
 
 void AudioChannel::start() {
     isPlaying = true;
-    packets.setWork(1);
+//    packets.setWork(1);
     frames.setWork(1);
 //    pthread_create(&pid_audio_decode, nullptr, task_audio_decode, this);
     pthread_create(&pid_audio_play, nullptr, task_audio_play, this);
@@ -61,7 +61,7 @@ void AudioChannel::start() {
 int AudioChannel::stop() {
     isPlaying = false;
     javaCallHelper = nullptr;
-    packets.setWork(0);
+//    packets.setWork(0);
     frames.setWork(0);
     pthread_join(pid_audio_decode, nullptr);
     pthread_join(pid_audio_play, nullptr);
@@ -101,41 +101,41 @@ int AudioChannel::stop() {
  * 音频解码
  */
 void AudioChannel::start_audio_decode() {
-    AVPacket *packet = nullptr;
-    while (isPlaying) {
-        int ret = packets.pop(packet);
-        if (!isPlaying) {
-            //如果停止播放了，跳出循环 释放packet
-            break;
-        }
-        if (!ret) {
-            //取数据包失败
-            continue;
-        }
-
-        //拿到了视频数据包（编码压缩了的），需要把数据包给解码器进行解码
-        ret = avcodec_send_packet(avCodecContext, packet);
-        if (ret) {
-            //往解码器发送数据包失败
-            break;
-        }
-        releaseAVPacket(&packet);
-        AVFrame *avFrame = av_frame_alloc();
-        ret = avcodec_receive_frame(avCodecContext, avFrame);
-//        LOGE("av_err2str--->%s", av_err2str(ret));
-        if (ret == AVERROR(EAGAIN)) {
-            //重来
-            continue;
-        } else if (ret != 0) {
-            break;
-        }
-        //ret=0 数据收发正常。成功获取视频原始数据包
-        while (isPlaying && frames.size() > 100) {
-            av_usleep(10 * 1000);
-        }
-        frames.push(avFrame);
-    }
-    releaseAVPacket(&packet);
+//    AVPacket *packet = nullptr;
+//    while (isPlaying) {
+//        int ret = packets.pop(packet);
+//        if (!isPlaying) {
+//            //如果停止播放了，跳出循环 释放packet
+//            break;
+//        }
+//        if (!ret) {
+//            //取数据包失败
+//            continue;
+//        }
+//
+//        //拿到了视频数据包（编码压缩了的），需要把数据包给解码器进行解码
+//        ret = avcodec_send_packet(avCodecContext, packet);
+//        if (ret) {
+//            //往解码器发送数据包失败
+//            break;
+//        }
+//        releaseAVPacket(&packet);
+//        AVFrame *avFrame = av_frame_alloc();
+//        ret = avcodec_receive_frame(avCodecContext, avFrame);
+////        LOGE("av_err2str--->%s", av_err2str(ret));
+//        if (ret == AVERROR(EAGAIN)) {
+//            //重来
+//            continue;
+//        } else if (ret != 0) {
+//            break;
+//        }
+//        //ret=0 数据收发正常。成功获取视频原始数据包
+//        while (isPlaying && frames.size() > 100) {
+//            av_usleep(10 * 1000);
+//        }
+//        frames.push(avFrame);
+//    }
+//    releaseAVPacket(&packet);
 }
 
 //4.3 创建回调函数

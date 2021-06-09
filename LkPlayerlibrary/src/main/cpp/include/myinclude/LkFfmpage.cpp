@@ -202,8 +202,7 @@ void LkFfmpage::_start() {
         } else if (ret == AVERROR_EOF) {
             //表示读完了
             //要考虑读完了，是否播放完了的情况
-            if (videoChannel->packets.empty() && videoChannel->frames.empty() &&
-                audioChannel->packets.empty() && audioChannel->frames.empty()) {
+            if ( videoChannel->frames.empty() &&audioChannel->frames.empty()) {
                 //播放完成
                 av_packet_free(&avPacket);
                 if (javaCallHelper) {

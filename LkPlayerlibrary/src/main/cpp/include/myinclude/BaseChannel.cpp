@@ -38,7 +38,7 @@ BaseChannel::BaseChannel(int id, AVCodecContext *codecContext,AVRational time_ba
     this->javaCallHelper=javaCallHelper;
     pthread_mutex_init(&mutex, nullptr);
     pthread_cond_init(&cond,nullptr);
-    packets.setReleaseCallBack(releaseAVPacket);
+//    packets.setReleaseCallBack(releaseAVPacket);
     frames.setReleaseCallBack(releaseAVFrame);
 }
 

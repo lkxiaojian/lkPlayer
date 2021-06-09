@@ -29,7 +29,7 @@ public:
     static void releaseAVFrame(AVFrame **);
 
     SafeQueue<AVFrame *> frames;
-    SafeQueue<AVPacket *> packets;
+//    SafeQueue<AVPacket *> packets;
     int id;
 
 //    virtual void start() = 0;
